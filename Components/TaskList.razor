@@ -4,7 +4,7 @@
 <div class="panel-card tasks-panel">
     <div class="panel-header">
         <div class="panel-title">
-            <span>📝</span> Subject & Task Checklist
+            Tasks & Subject Checklist
         </div>
         <div class="stat-sub">
             @CompletedCount / @State.Tasks.Count completed
@@ -16,31 +16,35 @@
         <div class="task-input-row">
             <input type="text" 
                    class="task-text-input" 
-                   placeholder="What are you studying next? (e.g. Solve Problem Set #2)" 
+                   placeholder="Enter task description (e.g. Complete automata problem set)" 
                    @bind="newTaskTitle" 
                    @bind:event="oninput"
                    @onkeydown="HandleKeyDown" />
         </div>
         <div class="task-options-row">
-            <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                 <select class="subject-select" @bind="selectedSubject">
                     @foreach (var sub in State.Subjects)
                     {
-                        <option value="@sub.Name">@sub.Icon @sub.Name</option>
+                        <option value="@sub.Name">@sub.Name</option>
                     }
                 </select>
 
                 <select class="pomodoro-select" @bind="estimatedPomodoros">
-                    <option value="1">🍅 1 Pomodoro (25m)</option>
-                    <option value="2">🍅 2 Pomodoros (50m)</option>
-                    <option value="3">🍅 3 Pomodoros (75m)</option>
-                    <option value="4">🍅 4 Pomodoros (100m)</option>
-                    <option value="5">🍅 5 Pomodoros (125m)</option>
+                    <option value="1">1 Cycle (25m)</option>
+                    <option value="2">2 Cycles (50m)</option>
+                    <option value="3">3 Cycles (75m)</option>
+                    <option value="4">4 Cycles (100m)</option>
+                    <option value="5">5 Cycles (125m)</option>
                 </select>
             </div>
 
             <button class="btn-add-task" @onclick="AddTask" disabled="@string.IsNullOrWhiteSpace(newTaskTitle)">
-                <span>➕</span> Add Task
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add Task
             </button>
         </div>
     </div>
@@ -62,7 +66,7 @@
             if (count > 0)
             {
                 <button class="filter-pill @(activeFilter == sub.Name ? "active" : "")" @onclick="() => activeFilter = sub.Name">
-                    @sub.Icon @sub.Name (@count)
+                    @sub.Name (@count)
                 </button>
             }
         }
@@ -85,7 +89,9 @@
                              title="Mark as @(task.IsCompleted ? "incomplete" : "complete")">
                             @if (task.IsCompleted)
                             {
-                                <span>✓</span>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
                             }
                         </div>
 
@@ -96,11 +102,11 @@
                             </span>
                             <div class="task-meta-row">
                                 <span class="subject-badge" 
-                                      style="background: @(HexToRgba(subjectDef?.Color ?? "#6366F1", 0.18)); color: @(subjectDef?.Color ?? "#6366F1"); border: 1px solid @(HexToRgba(subjectDef?.Color ?? "#6366F1", 0.35));">
-                                    @(subjectDef?.Icon ?? "📚") @task.Subject
+                                      style="background: @(HexToRgba(subjectDef?.Color ?? "#6366F1", 0.15)); color: @(subjectDef?.Color ?? "#6366F1"); border: 1px solid @(HexToRgba(subjectDef?.Color ?? "#6366F1", 0.3));">
+                                    @task.Subject
                                 </span>
                                 <span class="pomodoro-badge">
-                                    🍅 @task.CompletedPomodoros/@task.EstimatedPomodoros pomodoros
+                                    @task.CompletedPomodoros / @task.EstimatedPomodoros cycles
                                 </span>
                             </div>
                         </div>
@@ -113,13 +119,16 @@
                             <button class="btn-task-action @(isFocused ? "active-btn" : "")" 
                                     @onclick="() => SetActiveFocus(task.Id)"
                                     title="@(isFocused ? "Currently Active in Timer" : "Set as Active Timer Task")">
-                                @(isFocused ? "🎯 Focused" : "🎯 Focus")
+                                @(isFocused ? "Focused" : "Focus")
                             </button>
                         }
                         <button class="btn-task-action btn-delete" 
                                 @onclick="() => DeleteTask(task.Id)" 
                                 title="Delete Task">
-                            🗑️
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -128,9 +137,8 @@
         else
         {
             <div class="empty-state">
-                <div class="empty-icon">✨</div>
-                <p style="font-weight: 600;">No tasks found in this view</p>
-                <p class="stat-sub">Add a new task above or select a different filter tag.</p>
+                <p style="font-weight: 600; margin-bottom: 0.25rem;">No tasks found</p>
+                <p class="stat-sub">Add a new task above or select a different filter.</p>
             </div>
         }
     </div>
@@ -138,7 +146,7 @@
 
 @code {
     private string newTaskTitle = "";
-    private string selectedSubject = "Data Structures";
+    private string selectedSubject = "Application Development";
     private int estimatedPomodoros = 1;
     private string activeFilter = "All";
 

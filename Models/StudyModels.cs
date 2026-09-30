@@ -10,16 +10,16 @@ public enum TimerMode
 public class SubjectDef
 {
     public string Name { get; set; } = string.Empty;
-    public string Color { get; set; } = "#6366F1"; // Default Indigo
-    public string Icon { get; set; } = "📚";
+    public string Color { get; set; } = "#6366F1";
 
     public static List<SubjectDef> DefaultSubjects => new()
     {
-        new SubjectDef { Name = "Data Structures", Color = "#6366F1", Icon = "💻" },
-        new SubjectDef { Name = "Calculus", Color = "#10B981", Icon = "📐" },
-        new SubjectDef { Name = "Web Dev", Color = "#F59E0B", Icon = "🌐" },
-        new SubjectDef { Name = "Physics", Color = "#EC4899", Icon = "⚡" },
-        new SubjectDef { Name = "General Study", Color = "#8B5CF6", Icon = "📖" }
+        new SubjectDef { Name = "Automata Theory", Color = "#6366F1" },
+        new SubjectDef { Name = "Application Development", Color = "#3B82F6" },
+        new SubjectDef { Name = "Intelligent Systems", Color = "#10B981" },
+        new SubjectDef { Name = "Technopreneurship", Color = "#F59E0B" },
+        new SubjectDef { Name = "Quantitative Methods", Color = "#8B5CF6" },
+        new SubjectDef { Name = "Information Management 2", Color = "#06B6D4" }
     };
 }
 
@@ -27,7 +27,7 @@ public class TaskItem
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Title { get; set; } = string.Empty;
-    public string Subject { get; set; } = "General Study";
+    public string Subject { get; set; } = "Application Development";
     public int EstimatedPomodoros { get; set; } = 1;
     public int CompletedPomodoros { get; set; } = 0;
     public bool IsCompleted { get; set; } = false;
@@ -46,7 +46,7 @@ public class SessionRecord
         TimerMode.LongBreak => "Long Break",
         _ => "Session"
     };
-    public string Subject { get; set; } = "General Study";
+    public string Subject { get; set; } = "Application Development";
     public string TaskTitle { get; set; } = string.Empty;
     public int DurationMinutes { get; set; } = 25;
     public DateTime CompletedAt { get; set; } = DateTime.Now;

@@ -98,10 +98,12 @@ public class StudyStateService : IDisposable
     {
         Tasks = new List<TaskItem>
         {
-            new TaskItem { Title = "Review Binary Search Trees & AVL Rotations", Subject = "Data Structures", EstimatedPomodoros = 3, CompletedPomodoros = 2, IsCompleted = false },
-            new TaskItem { Title = "Solve Integration by Parts Problem Set #4", Subject = "Calculus", EstimatedPomodoros = 2, CompletedPomodoros = 1, IsCompleted = false },
-            new TaskItem { Title = "Build responsive Flexbox & CSS Grid UI", Subject = "Web Dev", EstimatedPomodoros = 4, CompletedPomodoros = 4, IsCompleted = true, CompletedAt = DateTime.Now.AddHours(-1) },
-            new TaskItem { Title = "Read Chapter 6: Thermodynamics Laws", Subject = "Physics", EstimatedPomodoros = 2, CompletedPomodoros = 0, IsCompleted = false }
+            new TaskItem { Title = "Implement Finite State Machine Diagram", Subject = "Automata Theory", EstimatedPomodoros = 3, CompletedPomodoros = 2, IsCompleted = false },
+            new TaskItem { Title = "Configure Blazor State Management & UI Components", Subject = "Application Development", EstimatedPomodoros = 4, CompletedPomodoros = 3, IsCompleted = false },
+            new TaskItem { Title = "Train Neural Network Classification Model", Subject = "Intelligent Systems", EstimatedPomodoros = 2, CompletedPomodoros = 2, IsCompleted = true, CompletedAt = DateTime.Now.AddHours(-1) },
+            new TaskItem { Title = "Prepare Business Model Canvas & Pitch Deck", Subject = "Technopreneurship", EstimatedPomodoros = 2, CompletedPomodoros = 0, IsCompleted = false },
+            new TaskItem { Title = "Solve Linear Programming Simplex Method", Subject = "Quantitative Methods", EstimatedPomodoros = 3, CompletedPomodoros = 1, IsCompleted = false },
+            new TaskItem { Title = "Design Normalized Relational Schema & Indexes", Subject = "Information Management 2", EstimatedPomodoros = 2, CompletedPomodoros = 0, IsCompleted = false }
         };
     }
 
@@ -109,10 +111,10 @@ public class StudyStateService : IDisposable
     {
         SessionHistory = new List<SessionRecord>
         {
-            new SessionRecord { Mode = TimerMode.Work, Subject = "Web Dev", TaskTitle = "Build responsive Flexbox & CSS Grid UI", DurationMinutes = 25, CompletedAt = DateTime.Now.AddHours(-3) },
-            new SessionRecord { Mode = TimerMode.Work, Subject = "Data Structures", TaskTitle = "Review Binary Search Trees & AVL Rotations", DurationMinutes = 25, CompletedAt = DateTime.Now.AddHours(-2) },
-            new SessionRecord { Mode = TimerMode.Work, Subject = "Calculus", TaskTitle = "Solve Integration by Parts Problem Set #4", DurationMinutes = 25, CompletedAt = DateTime.Now.AddHours(-1) },
-            new SessionRecord { Mode = TimerMode.ShortBreak, Subject = "Break", TaskTitle = "Hydration & Stretch", DurationMinutes = 5, CompletedAt = DateTime.Now.AddMinutes(-35) }
+            new SessionRecord { Mode = TimerMode.Work, Subject = "Application Development", TaskTitle = "Configure Blazor State Management & UI Components", DurationMinutes = 25, CompletedAt = DateTime.Now.AddHours(-3) },
+            new SessionRecord { Mode = TimerMode.Work, Subject = "Intelligent Systems", TaskTitle = "Train Neural Network Classification Model", DurationMinutes = 25, CompletedAt = DateTime.Now.AddHours(-2) },
+            new SessionRecord { Mode = TimerMode.Work, Subject = "Automata Theory", TaskTitle = "Implement Finite State Machine Diagram", DurationMinutes = 25, CompletedAt = DateTime.Now.AddHours(-1) },
+            new SessionRecord { Mode = TimerMode.ShortBreak, Subject = "Break", TaskTitle = "Hydration & Rest", DurationMinutes = 5, CompletedAt = DateTime.Now.AddMinutes(-35) }
         };
         CompletedPomodoroCount = SessionHistory.Count(s => s.Mode == TimerMode.Work && s.CompletedAt.Date == DateTime.Today);
     }

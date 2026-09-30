@@ -5,7 +5,7 @@
     <div class="modal-backdrop" @onclick="Close">
         <div class="modal-content" @onclick:stopPropagation="true">
             <div class="modal-header">
-                <div class="modal-title">⚙️ Timer & App Settings</div>
+                <div class="modal-title">Timer & Application Settings</div>
                 <button class="btn-close-modal" @onclick="Close">✕</button>
             </div>
 
@@ -23,7 +23,7 @@
                     <input type="number" class="setting-input" min="1" max="60" @bind="longMins" />
                 </div>
                 <div class="setting-field">
-                    <label class="setting-label">Daily Goal (Pomodoros)</label>
+                    <label class="setting-label">Daily Goal (Cycles)</label>
                     <input type="number" class="setting-input" min="1" max="30" @bind="dailyGoal" />
                 </div>
             </div>
@@ -32,7 +32,7 @@
                 <div class="setting-toggle-row">
                     <div>
                         <div style="font-weight: 600; font-size: 0.9rem;">Audio Chime</div>
-                        <div class="stat-sub">Play chime sound when timer completes</div>
+                        <div class="stat-sub">Play sound notification when timer completes</div>
                     </div>
                     <input type="checkbox" style="width: 20px; height: 20px; cursor: pointer;" @bind="soundEnabled" />
                 </div>
