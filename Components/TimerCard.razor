@@ -1,0 +1,145 @@
+@inject StudyStateService State
+@implements IDisposable
+
+<div class="panel-card timer-panel">
+    <div class="panel-header">
+        <div class="panel-title">
+            <span>⏱️</span> Pomodoro Timer
+        </div>
+        <div class="timer-mode-info">
+            <span class="timer-active-badge">
+                @(State.CurrentMode switch {
+                    TimerMode.Work => "🔥 Focus Mode",
+                    TimerMode.ShortBreak => "☕ Short Break",
+                    TimerMode.LongBreak => "🌴 Long Break",
+                    _ => "Focus"
+                })
+            </span>
+        </div>
+    </div>
+
+    <div class="timer-container">
+        <!-- Mode Switcher Tabs -->
+        <div class="mode-tabs">
+            <button class="mode-tab @(State.CurrentMode == TimerMode.Work ? "active-work" : "")" 
+                    @onclick="() => State.SetMode(TimerMode.Work)">
+                <span>🍅</span> Pomodoro (@State.Settings.WorkDurationMinutes m)
+            </button>
+            <button class="mode-tab @(State.CurrentMode == TimerMode.ShortBreak ? "active-short" : "")" 
+                    @onclick="() => State.SetMode(TimerMode.ShortBreak)">
+                <span>☕</span> Short Break (@State.Settings.ShortBreakMinutes m)
+            </button>
+            <button class="mode-tab @(State.CurrentMode == TimerMode.LongBreak ? "active-long" : "")" 
+                    @onclick="() => State.SetMode(TimerMode.LongBreak)">
+                <span>🌴</span> Long Break (@State.Settings.LongBreakMinutes m)
+            </button>
+        </div>
+
+        <!-- Circular Animated Timer SVG -->
+        <div class="timer-circle-wrapper">
+            <svg class="timer-svg" viewBox="0 0 280 280">
+                <circle class="timer-track" cx="140" cy="140" r="115" />
+                <circle class="timer-progress @GetProgressColorClass()"
+                        cx="140" cy="140" r="115"
+                        stroke-dasharray="@Circumference"
+                        stroke-dashoffset="@CalculateDashOffset()" />
+            </svg>
+
+            <div class="timer-center-content">
+                <div class="timer-digits">@FormattedTime</div>
+                @if (ActiveTask != null)
+                {
+                    <div class="active-task-pill" title="@ActiveTask.Title">
+                        📌 @ActiveTask.Title
+                    </div>
+                }
+                else
+                {
+                    <div class="stat-sub">Ready to focus</div>
+                }
+            </div>
+        </div>
+
+        <!-- Timer Controls (Flexbox) -->
+        <div class="timer-controls">
+            <button class="btn-icon-secondary" @onclick="() => State.ResetTimer()" title="Reset Timer">
+                🔄
+            </button>
+
+            @if (!State.IsRunning)
+            {
+                <button class="btn-primary-action" @onclick="() => State.StartTimer()">
+                    <span>▶</span> START FOCUS
+                </button>
+            }
+            else
+            {
+                <button class="btn-primary-action btn-pause" @onclick="() => State.PauseTimer()">
+                    <span>⏸</span> PAUSE
+                </button>
+            }
+
+            <button class="btn-icon-secondary" @onclick="() => State.SkipTimer()" title="Skip Session">
+                ⏭
+            </button>
+        </div>
+
+        <!-- Daily Cycle Counter Dots -->
+        <div class="cycle-dots-container">
+            <span class="cycle-dots-label">🍅 Today's Goal (@State.CompletedPomodoroCount / @State.Settings.DailyPomodoroGoal):</span>
+            <div class="cycle-dots">
+                @for (int i = 0; i < State.Settings.DailyPomodoroGoal; i++)
+                {
+                    <div class="cycle-dot @(i < State.CompletedPomodoroCount ? "filled" : "")"></div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private const double Radius = 115;
+    private double Circumference => 2 * Math.PI * Radius;
+
+    private TaskItem? ActiveTask => State.Tasks.FirstOrDefault(t => t.Id == State.ActiveTaskId);
+
+    private string FormattedTime
+    {
+        get
+        {
+            int mins = State.RemainingSeconds / 60;
+            int secs = State.RemainingSeconds % 60;
+            return $"{mins:D2}:{secs:D2}";
+        }
+    }
+
+    private string GetProgressColorClass() => State.CurrentMode switch
+    {
+        TimerMode.Work => "mode-work",
+        TimerMode.ShortBreak => "mode-short",
+        TimerMode.LongBreak => "mode-long",
+        _ => "mode-work"
+    };
+
+    private double CalculateDashOffset()
+    {
+        if (State.TotalModeSeconds <= 0) return 0;
+        double progressRatio = (double)State.RemainingSeconds / State.TotalModeSeconds;
+        return Circumference * (1.0 - progressRatio);
+    }
+
+    protected override void OnInitialized()
+    {
+        State.OnChange += OnStateChanged;
+    }
+
+    private void OnStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        State.OnChange -= OnStateChanged;
+    }
+}

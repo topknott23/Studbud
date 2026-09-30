@@ -1,0 +1,101 @@
+@inject StudyStateService State
+@implements IDisposable
+
+<div class="panel-card history-panel">
+    <div class="panel-header">
+        <div class="panel-title">
+            <span>📜</span> Session Log & Activity
+        </div>
+        @if (State.SessionHistory.Any())
+        {
+            <button class="nav-btn" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;" @onclick="ClearHistory">
+                🧹 Clear Log
+            </button>
+        }
+    </div>
+
+    <!-- Daily Goal Progress Indicator -->
+    <div style="margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600;">
+            <span style="color: var(--text-muted);">Daily Goal Progress</span>
+            <span style="color: var(--text-main);">@State.CompletedPomodoroCount / @State.Settings.DailyPomodoroGoal Pomodoros (@ProgressPercent%)</span>
+        </div>
+        <div class="goal-progress-bar">
+            <div class="goal-progress-fill" style="width: @ProgressPercent%;"></div>
+        </div>
+    </div>
+
+    <!-- History List -->
+    <div class="history-list">
+        @if (State.SessionHistory.Any())
+        {
+            @foreach (var record in State.SessionHistory.Take(10))
+            {
+                var subjectDef = State.Subjects.FirstOrDefault(s => s.Name == record.Subject);
+
+                <div class="history-item">
+                    <div class="history-left">
+                        <span style="font-size: 1.1rem;">
+                            @(record.Mode switch {
+                                TimerMode.Work => "🍅",
+                                TimerMode.ShortBreak => "☕",
+                                TimerMode.LongBreak => "🌴",
+                                _ => "⏱️"
+                            })
+                        </span>
+                        <div>
+                            <div class="history-title">@record.TaskTitle</div>
+                            <div class="history-time">
+                                @record.CompletedAt.ToString("hh:mm tt") • 
+                                <span style="color: @(subjectDef?.Color ?? "var(--text-muted)");">
+                                    @(subjectDef?.Icon ?? "") @record.Subject
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="history-duration">
+                        +@record.DurationMinutes min
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-state" style="padding: 1.5rem 1rem;">
+                <p style="font-weight: 500; font-size: 0.85rem;">No sessions logged today yet.</p>
+                <p class="stat-sub">Complete your first Pomodoro to track study history!</p>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private int ProgressPercent
+    {
+        get
+        {
+            if (State.Settings.DailyPomodoroGoal <= 0) return 0;
+            return Math.Min(100, (int)((double)State.CompletedPomodoroCount / State.Settings.DailyPomodoroGoal * 100));
+        }
+    }
+
+    private async Task ClearHistory()
+    {
+        await State.ClearHistoryAsync();
+    }
+
+    protected override void OnInitialized()
+    {
+        State.OnChange += OnStateChanged;
+    }
+
+    private void OnStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        State.OnChange -= OnStateChanged;
+    }
+}

@@ -1,0 +1,97 @@
+@inject StudyStateService State
+@implements IDisposable
+
+<div class="stats-banner">
+    <!-- Stat 1: Completed Pomodoro Cycles -->
+    <div class="stat-card">
+        <div class="stat-icon-wrapper stat-icon-red">
+            🍅
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Pomodoro Cycles</span>
+            <span class="stat-value">@State.CompletedPomodoroCount <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">/ @State.Settings.DailyPomodoroGoal</span></span>
+            <span class="stat-sub">@DailyGoalPercentage% of daily target</span>
+        </div>
+    </div>
+
+    <!-- Stat 2: Total Study Time -->
+    <div class="stat-card">
+        <div class="stat-icon-wrapper stat-icon-indigo">
+            ⏱️
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Total Focus Time</span>
+            <span class="stat-value">@FormattedStudyTime</span>
+            <span class="stat-sub">@TodaySessionsCount focus sessions</span>
+        </div>
+    </div>
+
+    <!-- Stat 3: Tasks Completed -->
+    <div class="stat-card">
+        <div class="stat-icon-wrapper stat-icon-green">
+            ✅
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Tasks Completed</span>
+            <span class="stat-value">@CompletedTasksCount <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">/ @State.Tasks.Count</span></span>
+            <span class="stat-sub">@(State.Tasks.Count - CompletedTasksCount) pending tasks</span>
+        </div>
+    </div>
+
+    <!-- Stat 4: Focus Score / Streak -->
+    <div class="stat-card">
+        <div class="stat-icon-wrapper stat-icon-amber">
+            🔥
+        </div>
+        <div class="stat-info">
+            <span class="stat-label">Daily Focus Score</span>
+            <span class="stat-value">@(Math.Min(100, (int)(DailyGoalPercentage * 1.25)))%</span>
+            <span class="stat-sub">Productive Streak Active</span>
+        </div>
+    </div>
+</div>
+
+@code {
+    private int TodaySessionsCount => State.SessionHistory.Count(s => s.Mode == TimerMode.Work && s.CompletedAt.Date == DateTime.Today);
+    private int TodayTotalMinutes => State.SessionHistory.Where(s => s.Mode == TimerMode.Work && s.CompletedAt.Date == DateTime.Today).Sum(s => s.DurationMinutes);
+
+    private int CompletedTasksCount => State.Tasks.Count(t => t.IsCompleted);
+
+    private int DailyGoalPercentage
+    {
+        get
+        {
+            if (State.Settings.DailyPomodoroGoal <= 0) return 0;
+            return Math.Min(100, (int)((double)State.CompletedPomodoroCount / State.Settings.DailyPomodoroGoal * 100));
+        }
+    }
+
+    private string FormattedStudyTime
+    {
+        get
+        {
+            int hours = TodayTotalMinutes / 60;
+            int mins = TodayTotalMinutes % 60;
+            if (hours > 0)
+            {
+                return $"{hours}h {mins}m";
+            }
+            return $"{mins} mins";
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        State.OnChange += OnStateChanged;
+    }
+
+    private void OnStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        State.OnChange -= OnStateChanged;
+    }
+}

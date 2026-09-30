@@ -1,7 +1,20 @@
-﻿@page "/"
+@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>StudyFlow | Study Planner & Pomodoro Dashboard</PageTitle>
 
-<h1>Hello, world!</h1>
+<!-- Top Stat Summary Banner -->
+<DailySummary />
 
-Welcome to your new app.
+<!-- Main Dashboard Grid (CSS Grid: 2 Columns on Desktop, 1 on Mobile) -->
+<div class="dashboard-grid">
+    <!-- Left Column: Interactive Pomodoro Timer & Session History -->
+    <div class="dashboard-column">
+        <TimerCard />
+        <SessionHistory />
+    </div>
+
+    <!-- Right Column: Subject & Task Checklist -->
+    <div class="dashboard-column">
+        <TaskList />
+    </div>
+</div>

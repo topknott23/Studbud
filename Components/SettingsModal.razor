@@ -1,0 +1,94 @@
+@inject StudyStateService State
+
+@if (IsOpen)
+{
+    <div class="modal-backdrop" @onclick="Close">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <div class="modal-title">⚙️ Timer & App Settings</div>
+                <button class="btn-close-modal" @onclick="Close">✕</button>
+            </div>
+
+            <div class="settings-grid">
+                <div class="setting-field">
+                    <label class="setting-label">Focus Duration (mins)</label>
+                    <input type="number" class="setting-input" min="1" max="120" @bind="workMins" />
+                </div>
+                <div class="setting-field">
+                    <label class="setting-label">Short Break (mins)</label>
+                    <input type="number" class="setting-input" min="1" max="60" @bind="shortMins" />
+                </div>
+                <div class="setting-field">
+                    <label class="setting-label">Long Break (mins)</label>
+                    <input type="number" class="setting-input" min="1" max="60" @bind="longMins" />
+                </div>
+                <div class="setting-field">
+                    <label class="setting-label">Daily Goal (Pomodoros)</label>
+                    <input type="number" class="setting-input" min="1" max="30" @bind="dailyGoal" />
+                </div>
+            </div>
+
+            <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <div class="setting-toggle-row">
+                    <div>
+                        <div style="font-weight: 600; font-size: 0.9rem;">Audio Chime</div>
+                        <div class="stat-sub">Play chime sound when timer completes</div>
+                    </div>
+                    <input type="checkbox" style="width: 20px; height: 20px; cursor: pointer;" @bind="soundEnabled" />
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="nav-btn" @onclick="Close">Cancel</button>
+                <button class="btn-primary-action" style="padding: 0.6rem 1.5rem; font-size: 0.9rem;" @onclick="SaveSettings">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback<bool> IsOpenChanged { get; set; }
+
+    private int workMins;
+    private int shortMins;
+    private int longMins;
+    private int dailyGoal;
+    private bool soundEnabled;
+
+    protected override void OnParametersSet()
+    {
+        if (IsOpen)
+        {
+            workMins = State.Settings.WorkDurationMinutes;
+            shortMins = State.Settings.ShortBreakMinutes;
+            longMins = State.Settings.LongBreakMinutes;
+            dailyGoal = State.Settings.DailyPomodoroGoal;
+            soundEnabled = State.Settings.SoundEnabled;
+        }
+    }
+
+    private async Task SaveSettings()
+    {
+        var settings = new UserSettings
+        {
+            WorkDurationMinutes = Math.Clamp(workMins, 1, 120),
+            ShortBreakMinutes = Math.Clamp(shortMins, 1, 60),
+            LongBreakMinutes = Math.Clamp(longMins, 1, 60),
+            DailyPomodoroGoal = Math.Clamp(dailyGoal, 1, 50),
+            SoundEnabled = soundEnabled,
+            Theme = State.Settings.Theme
+        };
+
+        await State.UpdateSettingsAsync(settings);
+        await Close();
+    }
+
+    private async Task Close()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+}

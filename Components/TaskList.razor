@@ -1,0 +1,222 @@
+@inject StudyStateService State
+@implements IDisposable
+
+<div class="panel-card tasks-panel">
+    <div class="panel-header">
+        <div class="panel-title">
+            <span>📝</span> Subject & Task Checklist
+        </div>
+        <div class="stat-sub">
+            @CompletedCount / @State.Tasks.Count completed
+        </div>
+    </div>
+
+    <!-- Quick-entry Input Form (Flexbox) -->
+    <div class="task-form">
+        <div class="task-input-row">
+            <input type="text" 
+                   class="task-text-input" 
+                   placeholder="What are you studying next? (e.g. Solve Problem Set #2)" 
+                   @bind="newTaskTitle" 
+                   @bind:event="oninput"
+                   @onkeydown="HandleKeyDown" />
+        </div>
+        <div class="task-options-row">
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <select class="subject-select" @bind="selectedSubject">
+                    @foreach (var sub in State.Subjects)
+                    {
+                        <option value="@sub.Name">@sub.Icon @sub.Name</option>
+                    }
+                </select>
+
+                <select class="pomodoro-select" @bind="estimatedPomodoros">
+                    <option value="1">🍅 1 Pomodoro (25m)</option>
+                    <option value="2">🍅 2 Pomodoros (50m)</option>
+                    <option value="3">🍅 3 Pomodoros (75m)</option>
+                    <option value="4">🍅 4 Pomodoros (100m)</option>
+                    <option value="5">🍅 5 Pomodoros (125m)</option>
+                </select>
+            </div>
+
+            <button class="btn-add-task" @onclick="AddTask" disabled="@string.IsNullOrWhiteSpace(newTaskTitle)">
+                <span>➕</span> Add Task
+            </button>
+        </div>
+    </div>
+
+    <!-- Subject & Status Filter Pills -->
+    <div class="filter-tabs">
+        <button class="filter-pill @(activeFilter == "All" ? "active" : "")" @onclick='() => activeFilter = "All"'>
+            All (@State.Tasks.Count)
+        </button>
+        <button class="filter-pill @(activeFilter == "Active" ? "active" : "")" @onclick='() => activeFilter = "Active"'>
+            Active (@(State.Tasks.Count - CompletedCount))
+        </button>
+        <button class="filter-pill @(activeFilter == "Completed" ? "active" : "")" @onclick='() => activeFilter = "Completed"'>
+            Completed (@CompletedCount)
+        </button>
+        @foreach (var sub in State.Subjects)
+        {
+            var count = State.Tasks.Count(t => t.Subject == sub.Name);
+            if (count > 0)
+            {
+                <button class="filter-pill @(activeFilter == sub.Name ? "active" : "")" @onclick="() => activeFilter = sub.Name">
+                    @sub.Icon @sub.Name (@count)
+                </button>
+            }
+        }
+    </div>
+
+    <!-- Task List Items -->
+    <div class="task-items-list">
+        @if (FilteredTasks.Any())
+        {
+            @foreach (var task in FilteredTasks)
+            {
+                var subjectDef = State.Subjects.FirstOrDefault(s => s.Name == task.Subject);
+                var isFocused = State.ActiveTaskId == task.Id;
+
+                <div class="task-item-card @(task.IsCompleted ? "completed" : "") @(isFocused ? "is-active-focus" : "")">
+                    <div class="task-left-section">
+                        <!-- Custom Checkbox -->
+                        <div class="custom-checkbox @(task.IsCompleted ? "checked" : "")" 
+                             @onclick="() => ToggleTask(task.Id)"
+                             title="Mark as @(task.IsCompleted ? "incomplete" : "complete")">
+                            @if (task.IsCompleted)
+                            {
+                                <span>✓</span>
+                            }
+                        </div>
+
+                        <!-- Task Details -->
+                        <div class="task-content">
+                            <span class="task-title-text" title="@task.Title">
+                                @task.Title
+                            </span>
+                            <div class="task-meta-row">
+                                <span class="subject-badge" 
+                                      style="background: @(HexToRgba(subjectDef?.Color ?? "#6366F1", 0.18)); color: @(subjectDef?.Color ?? "#6366F1"); border: 1px solid @(HexToRgba(subjectDef?.Color ?? "#6366F1", 0.35));">
+                                    @(subjectDef?.Icon ?? "📚") @task.Subject
+                                </span>
+                                <span class="pomodoro-badge">
+                                    🍅 @task.CompletedPomodoros/@task.EstimatedPomodoros pomodoros
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="task-actions">
+                        @if (!task.IsCompleted)
+                        {
+                            <button class="btn-task-action @(isFocused ? "active-btn" : "")" 
+                                    @onclick="() => SetActiveFocus(task.Id)"
+                                    title="@(isFocused ? "Currently Active in Timer" : "Set as Active Timer Task")">
+                                @(isFocused ? "🎯 Focused" : "🎯 Focus")
+                            </button>
+                        }
+                        <button class="btn-task-action btn-delete" 
+                                @onclick="() => DeleteTask(task.Id)" 
+                                title="Delete Task">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-state">
+                <div class="empty-icon">✨</div>
+                <p style="font-weight: 600;">No tasks found in this view</p>
+                <p class="stat-sub">Add a new task above or select a different filter tag.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string newTaskTitle = "";
+    private string selectedSubject = "Data Structures";
+    private int estimatedPomodoros = 1;
+    private string activeFilter = "All";
+
+    private int CompletedCount => State.Tasks.Count(t => t.IsCompleted);
+
+    private IEnumerable<TaskItem> FilteredTasks
+    {
+        get
+        {
+            return activeFilter switch
+            {
+                "All" => State.Tasks,
+                "Active" => State.Tasks.Where(t => !t.IsCompleted),
+                "Completed" => State.Tasks.Where(t => t.IsCompleted),
+                _ => State.Tasks.Where(t => t.Subject == activeFilter)
+            };
+        }
+    }
+
+    private async Task AddTask()
+    {
+        if (string.IsNullOrWhiteSpace(newTaskTitle)) return;
+        await State.AddTaskAsync(newTaskTitle, selectedSubject, estimatedPomodoros);
+        newTaskTitle = "";
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await AddTask();
+        }
+    }
+
+    private async Task ToggleTask(string id)
+    {
+        await State.ToggleTaskCompletionAsync(id);
+    }
+
+    private async Task DeleteTask(string id)
+    {
+        await State.DeleteTaskAsync(id);
+    }
+
+    private void SetActiveFocus(string id)
+    {
+        State.ActiveTaskId = id;
+    }
+
+    private string HexToRgba(string hex, double alpha)
+    {
+        try
+        {
+            hex = hex.Replace("#", "");
+            if (hex.Length == 6)
+            {
+                int r = Convert.ToInt32(hex.Substring(0, 2), 16);
+                int g = Convert.ToInt32(hex.Substring(2, 2), 16);
+                int b = Convert.ToInt32(hex.Substring(4, 2), 16);
+                return $"rgba({r}, {g}, {b}, {alpha.ToString(System.Globalization.CultureInfo.InvariantCulture)})";
+            }
+        }
+        catch { }
+        return $"rgba(99, 102, 241, {alpha})";
+    }
+
+    protected override void OnInitialized()
+    {
+        State.OnChange += OnStateChanged;
+    }
+
+    private void OnStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        State.OnChange -= OnStateChanged;
+    }
+}

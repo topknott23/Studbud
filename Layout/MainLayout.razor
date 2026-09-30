@@ -1,16 +1,61 @@
-﻿@inherits LayoutComponentBase
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+@inherits LayoutComponentBase
+@inject IJSRuntime JS
+@inject StudyStateService State
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+<div class="app-container">
+    <header class="top-navbar">
+        <div class="brand-section">
+            <div class="brand-icon">
+                🍅
+            </div>
+            <div>
+                <h1 class="brand-title">StudyFlow</h1>
+                <div class="brand-tagline">Study Planner & Pomodoro Dashboard</div>
+            </div>
         </div>
 
-        <article class="content px-4">
-            @Body
-        </article>
+        <div class="header-actions">
+            <button class="nav-btn" @onclick="ToggleTheme" title="Toggle Light/Dark Theme">
+                @(currentTheme == "dark" ? "☀️ Light Mode" : "🌙 Dark Mode")
+            </button>
+            <button class="nav-btn" @onclick="() => showSettings = true" title="Settings">
+                ⚙️ Settings
+            </button>
+        </div>
+    </header>
+
+    <main>
+        @Body
     </main>
+
+    <footer style="margin-top: 3rem; text-align: center; border-top: 1px solid var(--border-color); padding-top: 1.5rem; color: var(--text-subtle); font-size: 0.8rem;">
+        <p>Built with Blazor WebAssembly, C#, and Pure CSS (Grid & Flexbox) • Study Planner & Pomodoro</p>
+    </footer>
 </div>
+
+<SettingsModal @bind-IsOpen="showSettings" />
+
+@code {
+    private string currentTheme = "dark";
+    private bool showSettings = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await State.InitializeAsync();
+            try
+            {
+                currentTheme = await JS.InvokeAsync<string>("studyApp.getInitialTheme");
+                StateHasChanged();
+            }
+            catch { }
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        currentTheme = currentTheme == "dark" ? "light" : "dark";
+        await JS.InvokeVoidAsync("studyApp.setTheme", currentTheme);
+    }
+}
