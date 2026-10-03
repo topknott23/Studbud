@@ -1,79 +1,71 @@
 @inject StudyStateService State
 @implements IDisposable
 
-<div class="panel-card tasks-panel">
-    <div class="panel-header">
-        <div class="panel-title">
-            Tasks & Subject Checklist
-        </div>
-        <div class="stat-sub">
-            @CompletedCount / @State.Tasks.Count completed
-        </div>
+<div class="minimal-card">
+    <div class="minimal-card-header">
+        <span class="minimal-card-title">Tasks</span>
+        <span style="font-size: 0.8rem; color: var(--text-tertiary); font-family: var(--font-mono);">
+            @CompletedCount/@State.Tasks.Count done
+        </span>
     </div>
 
-    <!-- Quick-entry Input Form (Flexbox) -->
-    <div class="task-form">
-        <div class="task-input-row">
-            <input type="text" 
-                   class="task-text-input" 
-                   placeholder="Enter task description (e.g. Complete automata problem set)" 
-                   @bind="newTaskTitle" 
-                   @bind:event="oninput"
-                   @onkeydown="HandleKeyDown" />
-        </div>
-        <div class="task-options-row">
-            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                <select class="subject-select" @bind="selectedSubject">
+    <!-- Quick Task Add Box -->
+    <div class="task-quick-add">
+        <input type="text" 
+               class="task-quick-input" 
+               placeholder="Add a new task... (press Enter)" 
+               @bind="newTaskTitle" 
+               @bind:event="oninput"
+               @onkeydown="HandleKeyDown" />
+
+        <div class="task-add-footer">
+            <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
+                <select class="select-clean" @bind="selectedSubject">
                     @foreach (var sub in State.Subjects)
                     {
                         <option value="@sub.Name">@sub.Name</option>
                     }
                 </select>
 
-                <select class="pomodoro-select" @bind="estimatedPomodoros">
-                    <option value="1">1 Cycle (25m)</option>
-                    <option value="2">2 Cycles (50m)</option>
-                    <option value="3">3 Cycles (75m)</option>
-                    <option value="4">4 Cycles (100m)</option>
-                    <option value="5">5 Cycles (125m)</option>
+                <select class="select-clean" @bind="estimatedPomodoros">
+                    <option value="1">1 cycle (25m)</option>
+                    <option value="2">2 cycles (50m)</option>
+                    <option value="3">3 cycles (75m)</option>
+                    <option value="4">4 cycles (100m)</option>
                 </select>
             </div>
 
-            <button class="btn-add-task" @onclick="AddTask" disabled="@string.IsNullOrWhiteSpace(newTaskTitle)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                Add Task
+            <button class="btn-add-minimal" @onclick="AddTask" disabled="@string.IsNullOrWhiteSpace(newTaskTitle)">
+                Add
             </button>
         </div>
     </div>
 
-    <!-- Subject & Status Filter Pills -->
-    <div class="filter-tabs">
-        <button class="filter-pill @(activeFilter == "All" ? "active" : "")" @onclick='() => activeFilter = "All"'>
+    <!-- Minimal Filter Tabs -->
+    <div class="filter-row">
+        <button class="filter-btn @(activeFilter == "All" ? "active" : "")" @onclick='() => activeFilter = "All"'>
             All (@State.Tasks.Count)
         </button>
-        <button class="filter-pill @(activeFilter == "Active" ? "active" : "")" @onclick='() => activeFilter = "Active"'>
+        <button class="filter-btn @(activeFilter == "Active" ? "active" : "")" @onclick='() => activeFilter = "Active"'>
             Active (@(State.Tasks.Count - CompletedCount))
         </button>
-        <button class="filter-pill @(activeFilter == "Completed" ? "active" : "")" @onclick='() => activeFilter = "Completed"'>
-            Completed (@CompletedCount)
+        <button class="filter-btn @(activeFilter == "Completed" ? "active" : "")" @onclick='() => activeFilter = "Completed"'>
+            Done (@CompletedCount)
         </button>
         @foreach (var sub in State.Subjects)
         {
             var count = State.Tasks.Count(t => t.Subject == sub.Name);
             if (count > 0)
             {
-                <button class="filter-pill @(activeFilter == sub.Name ? "active" : "")" @onclick="() => activeFilter = sub.Name">
+                <button class="filter-btn @(activeFilter == sub.Name ? "active" : "")" @onclick="() => activeFilter = sub.Name">
                     @sub.Name (@count)
                 </button>
             }
         }
     </div>
 
-    <!-- Task List Items -->
-    <div class="task-items-list">
+    <!-- Tasks List Items -->
+    <div class="task-items-container">
         @if (FilteredTasks.Any())
         {
             @foreach (var task in FilteredTasks)
@@ -81,51 +73,52 @@
                 var subjectDef = State.Subjects.FirstOrDefault(s => s.Name == task.Subject);
                 var isFocused = State.ActiveTaskId == task.Id;
 
-                <div class="task-item-card @(task.IsCompleted ? "completed" : "") @(isFocused ? "is-active-focus" : "")">
-                    <div class="task-left-section">
-                        <!-- Custom Checkbox -->
-                        <div class="custom-checkbox @(task.IsCompleted ? "checked" : "")" 
+                <div class="task-row @(task.IsCompleted ? "completed" : "") @(isFocused ? "is-focus-target" : "")">
+                    <div class="task-main-col">
+                        <!-- Custom Minimal Checkbox -->
+                        <div class="checkbox-minimal @(task.IsCompleted ? "checked" : "")" 
                              @onclick="() => ToggleTask(task.Id)"
                              title="Mark as @(task.IsCompleted ? "incomplete" : "complete")">
                             @if (task.IsCompleted)
                             {
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
                                     <polyline points="20 6 9 17 4 12"></polyline>
                                 </svg>
                             }
                         </div>
 
-                        <!-- Task Details -->
-                        <div class="task-content">
-                            <span class="task-title-text" title="@task.Title">
+                        <!-- Task Info -->
+                        <div class="task-details">
+                            <span class="task-name" title="@task.Title">
                                 @task.Title
                             </span>
-                            <div class="task-meta-row">
-                                <span class="subject-badge" 
-                                      style="background: @(HexToRgba(subjectDef?.Color ?? "#6366F1", 0.15)); color: @(subjectDef?.Color ?? "#6366F1"); border: 1px solid @(HexToRgba(subjectDef?.Color ?? "#6366F1", 0.3));">
+                            <div class="task-tags">
+                                <span class="subject-tag-clean">
+                                    <span class="subject-dot" style="background: @(subjectDef?.Color ?? "var(--text-tertiary)");"></span>
                                     @task.Subject
                                 </span>
-                                <span class="pomodoro-badge">
-                                    @task.CompletedPomodoros / @task.EstimatedPomodoros cycles
+                                <span class="cycle-tag-clean">
+                                    @task.CompletedPomodoros/@task.EstimatedPomodoros cycles
                                 </span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Actions -->
-                    <div class="task-actions">
+                    <div class="task-row-actions">
                         @if (!task.IsCompleted)
                         {
-                            <button class="btn-task-action @(isFocused ? "active-btn" : "")" 
+                            <button class="btn-icon-subtle" 
+                                    style="@(isFocused ? "color: var(--text-primary); font-weight: 600;" : "")"
                                     @onclick="() => SetActiveFocus(task.Id)"
-                                    title="@(isFocused ? "Currently Active in Timer" : "Set as Active Timer Task")">
-                                @(isFocused ? "Focused" : "Focus")
+                                    title="@(isFocused ? "Active in timer" : "Focus on this task")">
+                                @(isFocused ? "Active" : "Focus")
                             </button>
                         }
-                        <button class="btn-task-action btn-delete" 
+                        <button class="btn-icon-subtle delete" 
                                 @onclick="() => DeleteTask(task.Id)" 
                                 title="Delete Task">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="3 6 5 6 21 6"></polyline>
                                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                             </svg>
@@ -136,9 +129,8 @@
         }
         else
         {
-            <div class="empty-state">
-                <p style="font-weight: 600; margin-bottom: 0.25rem;">No tasks found</p>
-                <p class="stat-sub">Add a new task above or select a different filter.</p>
+            <div class="empty-placeholder">
+                No tasks to display in this view.
             </div>
         }
     </div>
@@ -194,23 +186,6 @@
     private void SetActiveFocus(string id)
     {
         State.ActiveTaskId = id;
-    }
-
-    private string HexToRgba(string hex, double alpha)
-    {
-        try
-        {
-            hex = hex.Replace("#", "");
-            if (hex.Length == 6)
-            {
-                int r = Convert.ToInt32(hex.Substring(0, 2), 16);
-                int g = Convert.ToInt32(hex.Substring(2, 2), 16);
-                int b = Convert.ToInt32(hex.Substring(4, 2), 16);
-                return $"rgba({r}, {g}, {b}, {alpha.ToString(System.Globalization.CultureInfo.InvariantCulture)})";
-            }
-        }
-        catch { }
-        return $"rgba(99, 102, 241, {alpha})";
     }
 
     protected override void OnInitialized()

@@ -1,4 +1,4 @@
-# StudyFlow — Study Planner & Pomodoro Dashboard
+# Studbud — Study Planner & Pomodoro Dashboard
 
 A modern, clean web application built with **Blazor WebAssembly (.NET 10)**, **C#**, and **Pure CSS (Grid & Flexbox)**. Designed with zero CSS frameworks, sharp typography, minimalist SVG iconography, and sleek dark/light mode glassmorphic UI.
 

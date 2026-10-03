@@ -1,6 +1,6 @@
-# Figma Design Guide & Blueprint — StudyFlow Dashboard
+# Figma Design Guide & Blueprint — Studbud Dashboard
 
-This guide provides the exact design specifications, frame layouts, typography scales, color palettes, and component hierarchy to design the **Study Planner & Pomodoro Dashboard** in Figma with a clean, minimal aesthetic.
+This guide provides the exact design specifications, frame layouts, typography scales, color palettes, and component hierarchy to design the **Studbud** (Study Planner & Pomodoro Dashboard) in Figma with a clean, minimal aesthetic.
 
 ---
 

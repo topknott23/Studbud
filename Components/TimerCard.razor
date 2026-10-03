@@ -1,69 +1,65 @@
 @inject StudyStateService State
 @implements IDisposable
 
-<div class="panel-card timer-panel">
-    <div class="panel-header">
-        <div class="panel-title">
-            Pomodoro Timer
-        </div>
-        <div class="timer-mode-info">
-            <span class="timer-active-badge">
-                @(State.CurrentMode switch {
-                    TimerMode.Work => "Focus Mode",
-                    TimerMode.ShortBreak => "Short Break",
-                    TimerMode.LongBreak => "Long Break",
-                    _ => "Focus"
-                })
-            </span>
-        </div>
+<div class="minimal-card">
+    <div class="minimal-card-header">
+        <span class="minimal-card-title">Timer</span>
+        <span class="history-session-type @(State.CurrentMode == TimerMode.Work ? "work" : "break")">
+            @(State.CurrentMode switch {
+                TimerMode.Work => "Focus Session",
+                TimerMode.ShortBreak => "Short Break",
+                TimerMode.LongBreak => "Long Break",
+                _ => "Focus"
+            })
+        </span>
     </div>
 
     <div class="timer-container">
-        <!-- Mode Switcher Tabs -->
-        <div class="mode-tabs">
-            <button class="mode-tab @(State.CurrentMode == TimerMode.Work ? "active-work" : "")" 
+        <!-- Segmented Control Tabs -->
+        <div class="segmented-control">
+            <button class="segmented-btn @(State.CurrentMode == TimerMode.Work ? "active" : "")" 
                     @onclick="() => State.SetMode(TimerMode.Work)">
-                Pomodoro (@State.Settings.WorkDurationMinutes m)
+                Focus (@State.Settings.WorkDurationMinutes m)
             </button>
-            <button class="mode-tab @(State.CurrentMode == TimerMode.ShortBreak ? "active-short" : "")" 
+            <button class="segmented-btn @(State.CurrentMode == TimerMode.ShortBreak ? "active" : "")" 
                     @onclick="() => State.SetMode(TimerMode.ShortBreak)">
                 Short Break (@State.Settings.ShortBreakMinutes m)
             </button>
-            <button class="mode-tab @(State.CurrentMode == TimerMode.LongBreak ? "active-long" : "")" 
+            <button class="segmented-btn @(State.CurrentMode == TimerMode.LongBreak ? "active" : "")" 
                     @onclick="() => State.SetMode(TimerMode.LongBreak)">
                 Long Break (@State.Settings.LongBreakMinutes m)
             </button>
         </div>
 
-        <!-- Circular Animated Timer SVG -->
-        <div class="timer-circle-wrapper">
-            <svg class="timer-svg" viewBox="0 0 280 280">
-                <circle class="timer-track" cx="140" cy="140" r="115" />
-                <circle class="timer-progress @GetProgressColorClass()"
-                        cx="140" cy="140" r="115"
+        <!-- Sleek Arc Timer Frame -->
+        <div class="timer-display-frame">
+            <svg class="timer-svg" viewBox="0 0 230 230">
+                <circle class="timer-track-circle" cx="115" cy="115" r="98" />
+                <circle class="timer-progress-arc @GetProgressColorClass()"
+                        cx="115" cy="115" r="98"
                         stroke-dasharray="@Circumference"
                         stroke-dashoffset="@CalculateDashOffset()" />
             </svg>
 
-            <div class="timer-center-content">
+            <div class="timer-digits-wrapper">
                 <div class="timer-digits">@FormattedTime</div>
                 @if (ActiveTask != null)
                 {
-                    <div class="active-task-pill" title="@ActiveTask.Title">
+                    <div class="timer-task-chip" title="@ActiveTask.Title">
                         @ActiveTask.Title
                     </div>
                 }
                 else
                 {
-                    <div class="stat-sub">Ready to begin</div>
+                    <div class="timer-status-caption">Ready to focus</div>
                 }
             </div>
         </div>
 
-        <!-- Timer Controls (Flexbox) -->
-        <div class="timer-controls">
-            <button class="btn-icon-secondary" @onclick="() => State.ResetTimer()" title="Reset Timer">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <!-- Action Controls -->
+        <div class="timer-actions">
+            <button class="btn-ghost-icon" @onclick="() => State.ResetTimer()" title="Reset Timer">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
                     <path d="M3 3v5h5"/>
                 </svg>
@@ -71,39 +67,39 @@
 
             @if (!State.IsRunning)
             {
-                <button class="btn-primary-action" @onclick="() => State.StartTimer()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;">
+                <button class="btn-solid-primary" @onclick="() => State.StartTimer()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                         <polygon points="5 3 19 12 5 21 5 3"/>
                     </svg>
-                    START FOCUS
+                    <span>Start Focus</span>
                 </button>
             }
             else
             {
-                <button class="btn-primary-action btn-pause" @onclick="() => State.PauseTimer()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;">
+                <button class="btn-solid-primary" style="background: var(--status-warning); color: #000;" @onclick="() => State.PauseTimer()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                         <rect x="6" y="4" width="4" height="16"/>
                         <rect x="14" y="4" width="4" height="16"/>
                     </svg>
-                    PAUSE
+                    <span>Pause</span>
                 </button>
             }
 
-            <button class="btn-icon-secondary" @onclick="() => State.SkipTimer()" title="Skip Session">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <button class="btn-ghost-icon" @onclick="() => State.SkipTimer()" title="Skip Session">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="5 4 15 12 5 20 5 4"/>
                     <line x1="19" y1="5" x2="19" y2="19"/>
                 </svg>
             </button>
         </div>
 
-        <!-- Daily Cycle Counter Dots -->
-        <div class="cycle-dots-container">
-            <span class="cycle-dots-label">Completed Cycles: @State.CompletedPomodoroCount / @State.Settings.DailyPomodoroGoal</span>
-            <div class="cycle-dots">
+        <!-- Cycle Progress Indicator -->
+        <div class="cycle-dots-row">
+            <span class="cycle-dots-label">Daily Target (@State.CompletedPomodoroCount / @State.Settings.DailyPomodoroGoal cycles)</span>
+            <div class="cycle-pills">
                 @for (int i = 0; i < State.Settings.DailyPomodoroGoal; i++)
                 {
-                    <div class="cycle-dot @(i < State.CompletedPomodoroCount ? "filled" : "")"></div>
+                    <div class="cycle-pill @(i < State.CompletedPomodoroCount ? "filled" : "")"></div>
                 }
             </div>
         </div>
@@ -111,7 +107,7 @@
 </div>
 
 @code {
-    private const double Radius = 115;
+    private const double Radius = 98;
     private double Circumference => 2 * Math.PI * Radius;
 
     private TaskItem? ActiveTask => State.Tasks.FirstOrDefault(t => t.Id == State.ActiveTaskId);

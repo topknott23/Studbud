@@ -1,64 +1,60 @@
 @inject StudyStateService State
 @implements IDisposable
 
-<div class="panel-card history-panel">
-    <div class="panel-header">
-        <div class="panel-title">
-            Session Log & Activity
-        </div>
+<div class="minimal-card">
+    <div class="minimal-card-header">
+        <span class="minimal-card-title">Activity Log</span>
         @if (State.SessionHistory.Any())
         {
-            <button class="nav-btn" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;" @onclick="ClearHistory">
-                Clear Log
+            <button class="btn-icon-subtle" @onclick="ClearHistory">
+                Clear
             </button>
         }
     </div>
 
-    <!-- Daily Goal Progress Indicator -->
+    <!-- Thin Target Progress Bar -->
     <div style="margin-bottom: 1.25rem;">
-        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600;">
-            <span style="color: var(--text-muted);">Daily Target Progress</span>
-            <span style="color: var(--text-main);">@State.CompletedPomodoroCount / @State.Settings.DailyPomodoroGoal Cycles (@ProgressPercent%)</span>
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+            <span style="color: var(--text-secondary);">Goal Progress</span>
+            <span style="color: var(--text-primary); font-family: var(--font-mono); font-weight: 500;">
+                @State.CompletedPomodoroCount / @State.Settings.DailyPomodoroGoal cycles (@ProgressPercent%)
+            </span>
         </div>
-        <div class="goal-progress-bar">
-            <div class="goal-progress-fill" style="width: @ProgressPercent%;"></div>
+        <div class="target-progress-bar">
+            <div class="target-progress-fill" style="width: @ProgressPercent%;"></div>
         </div>
     </div>
 
-    <!-- History List -->
-    <div class="history-list">
+    <!-- Timeline List -->
+    <div class="history-timeline">
         @if (State.SessionHistory.Any())
         {
             @foreach (var record in State.SessionHistory.Take(10))
             {
                 var subjectDef = State.Subjects.FirstOrDefault(s => s.Name == record.Subject);
 
-                <div class="history-item">
-                    <div class="history-left">
-                        <span class="session-type-indicator @(record.Mode == TimerMode.Work ? "type-work" : "type-break")">
-                            @(record.Mode == TimerMode.Work ? "Focus" : "Break")
+                <div class="history-row">
+                    <div class="history-left-group">
+                        <span class="history-session-type @(record.Mode == TimerMode.Work ? "work" : "break")">
+                            @(record.Mode == TimerMode.Work ? "Work" : "Break")
                         </span>
                         <div>
-                            <div class="history-title">@record.TaskTitle</div>
-                            <div class="history-time">
-                                @record.CompletedAt.ToString("hh:mm tt") • 
-                                <span style="color: @(subjectDef?.Color ?? "var(--text-muted)"); font-weight: 600;">
-                                    @record.Subject
-                                </span>
+                            <div class="history-task-text">@record.TaskTitle</div>
+                            <div class="history-meta-text">
+                                @record.CompletedAt.ToString("hh:mm tt") • @record.Subject
                             </div>
                         </div>
                     </div>
-                    <div class="history-duration">
-                        +@record.DurationMinutes min
+                    <div class="history-duration-badge">
+                        +@record.DurationMinutes m
                     </div>
                 </div>
             }
         }
         else
         {
-            <div class="empty-state" style="padding: 1.5rem 1rem;">
-                <p style="font-weight: 500; font-size: 0.85rem;">No sessions logged today.</p>
-                <p class="stat-sub">Complete a study session to record your progress.</p>
+            <div class="empty-placeholder">
+                No sessions recorded today.
             </div>
         }
     </div>

@@ -350,7 +350,7 @@ public class StudyStateService : IDisposable
             int secs = RemainingSeconds % 60;
             string timeStr = $"{mins:D2}:{secs:D2}";
             string modeName = CurrentMode == TimerMode.Work ? "Focus" : "Break";
-            string title = $"{timeStr} - {modeName} | StudyPlanner";
+            string title = $"{timeStr} - {modeName} | Studbud";
             _ = _js.InvokeVoidAsync("studyApp.setTitle", title);
         }
         catch { }

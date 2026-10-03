@@ -2,63 +2,59 @@
 @implements IDisposable
 
 <div class="stats-banner">
-    <!-- Stat 1: Completed Cycles -->
-    <div class="stat-card">
-        <div class="stat-icon-wrapper stat-icon-red">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
+    <!-- Metric 1: Focus Cycles -->
+    <div class="stat-tile">
+        <div class="stat-tile-header">
+            <span class="stat-tile-label">Cycles</span>
+            <span style="font-size: 0.75rem; color: var(--text-tertiary);">Daily Goal</span>
         </div>
-        <div class="stat-info">
-            <span class="stat-label">Focus Cycles</span>
-            <span class="stat-value">@State.CompletedPomodoroCount <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">/ @State.Settings.DailyPomodoroGoal</span></span>
-            <span class="stat-sub">@DailyGoalPercentage% of daily target</span>
+        <div class="stat-tile-value">
+            @State.CompletedPomodoroCount <span style="font-size: 1.1rem; color: var(--text-tertiary); font-weight: 400;">/ @State.Settings.DailyPomodoroGoal</span>
         </div>
-    </div>
-
-    <!-- Stat 2: Total Study Time -->
-    <div class="stat-card">
-        <div class="stat-icon-wrapper stat-icon-indigo">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                <line x1="8" y1="21" x2="16" y2="21"></line>
-                <line x1="12" y1="17" x2="12" y2="21"></line>
-            </svg>
-        </div>
-        <div class="stat-info">
-            <span class="stat-label">Total Focus Time</span>
-            <span class="stat-value">@FormattedStudyTime</span>
-            <span class="stat-sub">@TodaySessionsCount logged sessions</span>
+        <div class="stat-tile-sub">
+            @DailyGoalPercentage% completed
         </div>
     </div>
 
-    <!-- Stat 3: Tasks Completed -->
-    <div class="stat-card">
-        <div class="stat-icon-wrapper stat-icon-green">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
+    <!-- Metric 2: Total Study Time -->
+    <div class="stat-tile">
+        <div class="stat-tile-header">
+            <span class="stat-tile-label">Focus Time</span>
+            <span style="font-size: 0.75rem; color: var(--text-tertiary);">Today</span>
         </div>
-        <div class="stat-info">
-            <span class="stat-label">Tasks Completed</span>
-            <span class="stat-value">@CompletedTasksCount <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 500;">/ @State.Tasks.Count</span></span>
-            <span class="stat-sub">@(State.Tasks.Count - CompletedTasksCount) pending tasks</span>
+        <div class="stat-tile-value">
+            @FormattedStudyTime
+        </div>
+        <div class="stat-tile-sub">
+            @TodaySessionsCount sessions
         </div>
     </div>
 
-    <!-- Stat 4: Focus Score / Productivity -->
-    <div class="stat-card">
-        <div class="stat-icon-wrapper stat-icon-amber">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-            </svg>
+    <!-- Metric 3: Tasks Completed -->
+    <div class="stat-tile">
+        <div class="stat-tile-header">
+            <span class="stat-tile-label">Tasks</span>
+            <span style="font-size: 0.75rem; color: var(--text-tertiary);">Pending: @(State.Tasks.Count - CompletedTasksCount)</span>
         </div>
-        <div class="stat-info">
-            <span class="stat-label">Productivity Rate</span>
-            <span class="stat-value">@(Math.Min(100, (int)(DailyGoalPercentage * 1.25)))%</span>
-            <span class="stat-sub">Active session efficiency</span>
+        <div class="stat-tile-value">
+            @CompletedTasksCount <span style="font-size: 1.1rem; color: var(--text-tertiary); font-weight: 400;">/ @State.Tasks.Count</span>
+        </div>
+        <div class="stat-tile-sub">
+            @(State.Tasks.Count > 0 ? (int)((double)CompletedTasksCount / State.Tasks.Count * 100) : 0)% task completion
+        </div>
+    </div>
+
+    <!-- Metric 4: Productivity Rate -->
+    <div class="stat-tile">
+        <div class="stat-tile-header">
+            <span class="stat-tile-label">Productivity</span>
+            <span style="font-size: 0.75rem; color: var(--status-success);">Active</span>
+        </div>
+        <div class="stat-tile-value">
+            @(Math.Min(100, (int)(DailyGoalPercentage * 1.25)))%
+        </div>
+        <div class="stat-tile-sub">
+            Daily focus score
         </div>
     </div>
 </div>
@@ -88,7 +84,7 @@
             {
                 return $"{hours}h {mins}m";
             }
-            return $"{mins} mins";
+            return $"{mins}m";
         }
     }
 
