@@ -1,60 +1,66 @@
 @inject StudyStateService State
 @implements IDisposable
 
-<div class="minimal-card">
-    <div class="minimal-card-header">
-        <span class="minimal-card-title">Activity Log</span>
+<div class="rounded-2xl bg-white dark:bg-[#121520] border border-slate-200/80 dark:border-[#1E2337] p-5 sm:p-6 shadow-sm flex flex-col">
+    <!-- Header -->
+    <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-[#1E2337] mb-4">
+        <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <span class="font-bold text-sm tracking-tight text-slate-900 dark:text-white">Activity Log</span>
+        </div>
         @if (State.SessionHistory.Any())
         {
-            <button class="btn-icon-subtle" @onclick="ClearHistory">
+            <button class="text-xs text-slate-500 hover:text-rose-500 transition-colors font-medium" 
+                    @onclick="ClearHistory">
                 Clear
             </button>
         }
     </div>
 
-    <!-- Thin Target Progress Bar -->
-    <div style="margin-bottom: 1.25rem;">
-        <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
-            <span style="color: var(--text-secondary);">Goal Progress</span>
-            <span style="color: var(--text-primary); font-family: var(--font-mono); font-weight: 500;">
-                @State.CompletedPomodoroCount / @State.Settings.DailyPomodoroGoal cycles (@ProgressPercent%)
+    <!-- Target Goal Progress Bar -->
+    <div class="mb-5 p-3 rounded-xl bg-slate-50 dark:bg-[#161928] border border-slate-200/60 dark:border-[#1E2337]">
+        <div class="flex items-center justify-between text-xs mb-2">
+            <span class="text-slate-600 dark:text-[#949BAF] font-medium">Daily Cycle Progress</span>
+            <span class="font-mono font-semibold text-slate-900 dark:text-white">
+                @State.CompletedPomodoroCount / @State.Settings.DailyPomodoroGoal (@ProgressPercent%)
             </span>
         </div>
-        <div class="target-progress-bar">
-            <div class="target-progress-fill" style="width: @ProgressPercent%;"></div>
+        <div class="w-full bg-slate-200 dark:bg-[#1E2337] h-2 rounded-full overflow-hidden">
+            <div class="bg-indigo-500 h-full rounded-full transition-all duration-500 shadow-sm shadow-indigo-500/30" style="width: @ProgressPercent%;"></div>
         </div>
     </div>
 
     <!-- Timeline List -->
-    <div class="history-timeline">
+    <div class="space-y-2.5 overflow-y-auto max-h-[300px] pr-1">
         @if (State.SessionHistory.Any())
         {
             @foreach (var record in State.SessionHistory.Take(10))
             {
-                var subjectDef = State.Subjects.FirstOrDefault(s => s.Name == record.Subject);
-
-                <div class="history-row">
-                    <div class="history-left-group">
-                        <span class="history-session-type @(record.Mode == TimerMode.Work ? "work" : "break")">
+                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50/50 dark:bg-[#151826]/70 border border-slate-200/60 dark:border-[#1E2337] hover:border-slate-300 dark:hover:border-[#2E3654] transition-all">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="px-2 py-0.5 text-[11px] font-semibold rounded-md font-mono @(record.Mode == TimerMode.Work ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/40" : "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40")">
                             @(record.Mode == TimerMode.Work ? "Work" : "Break")
                         </span>
-                        <div>
-                            <div class="history-task-text">@record.TaskTitle</div>
-                            <div class="history-meta-text">
+                        <div class="min-w-0">
+                            <div class="text-xs sm:text-sm font-semibold truncate text-slate-800 dark:text-zinc-200">
+                                @record.TaskTitle
+                            </div>
+                            <div class="text-[11px] text-slate-500 dark:text-[#949BAF] mt-0.5">
                                 @record.CompletedAt.ToString("hh:mm tt") • @record.Subject
                             </div>
                         </div>
                     </div>
-                    <div class="history-duration-badge">
+
+                    <span class="font-mono text-xs font-semibold text-emerald-600 dark:text-emerald-400 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/30">
                         +@record.DurationMinutes m
-                    </div>
+                    </span>
                 </div>
             }
         }
         else
         {
-            <div class="empty-placeholder">
-                No sessions recorded today.
+            <div class="py-8 text-center text-xs text-slate-400 dark:text-[#949BAF]">
+                No study sessions logged today yet.
             </div>
         }
     </div>

@@ -1,10 +1,14 @@
 @inject StudyStateService State
 @implements IDisposable
 
-<div class="minimal-card">
-    <div class="minimal-card-header">
-        <span class="minimal-card-title">Timer</span>
-        <span class="history-session-type @(State.CurrentMode == TimerMode.Work ? "work" : "break")">
+<div class="rounded-2xl bg-white dark:bg-[#121520] border border-slate-200/80 dark:border-[#1E2337] p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+    <!-- Header -->
+    <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-[#1E2337]">
+        <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full @(State.CurrentMode == TimerMode.Work ? "bg-indigo-500 shadow-glow-indigo" : (State.CurrentMode == TimerMode.ShortBreak ? "bg-emerald-500 shadow-glow-emerald" : "bg-amber-500 shadow-glow-amber"))"></span>
+            <span class="font-bold text-sm tracking-tight text-slate-900 dark:text-white">Timer</span>
+        </div>
+        <span class="px-2.5 py-1 text-xs font-semibold rounded-lg font-mono @(State.CurrentMode == TimerMode.Work ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/40" : (State.CurrentMode == TimerMode.ShortBreak ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40" : "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40"))">
             @(State.CurrentMode switch {
                 TimerMode.Work => "Focus Session",
                 TimerMode.ShortBreak => "Short Break",
@@ -14,100 +18,120 @@
         </span>
     </div>
 
-    <div class="timer-container">
-        <!-- Segmented Control Tabs -->
-        <div class="segmented-control">
-            <button class="segmented-btn @(State.CurrentMode == TimerMode.Work ? "active" : "")" 
-                    @onclick="() => State.SetMode(TimerMode.Work)">
-                Focus (@State.Settings.WorkDurationMinutes m)
-            </button>
-            <button class="segmented-btn @(State.CurrentMode == TimerMode.ShortBreak ? "active" : "")" 
-                    @onclick="() => State.SetMode(TimerMode.ShortBreak)">
-                Short Break (@State.Settings.ShortBreakMinutes m)
-            </button>
-            <button class="segmented-btn @(State.CurrentMode == TimerMode.LongBreak ? "active" : "")" 
-                    @onclick="() => State.SetMode(TimerMode.LongBreak)">
-                Long Break (@State.Settings.LongBreakMinutes m)
-            </button>
-        </div>
+    <!-- Segmented Tabs -->
+    <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 dark:bg-[#181C2B] rounded-xl my-5 border border-slate-200/60 dark:border-[#1E2337]">
+        <button class="py-2 text-xs font-medium rounded-lg transition-all text-center @(State.CurrentMode == TimerMode.Work ? "bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-sm font-semibold" : "text-slate-600 dark:text-[#949BAF] hover:text-slate-900 dark:hover:text-white")" 
+                @onclick="() => State.SetMode(TimerMode.Work)">
+            Focus <span class="hidden sm:inline">(@State.Settings.WorkDurationMinutes m)</span>
+        </button>
+        <button class="py-2 text-xs font-medium rounded-lg transition-all text-center @(State.CurrentMode == TimerMode.ShortBreak ? "bg-white dark:bg-emerald-600 text-slate-900 dark:text-white shadow-sm font-semibold" : "text-slate-600 dark:text-[#949BAF] hover:text-slate-900 dark:hover:text-white")" 
+                @onclick="() => State.SetMode(TimerMode.ShortBreak)">
+            Short <span class="hidden sm:inline">(@State.Settings.ShortBreakMinutes m)</span>
+        </button>
+        <button class="py-2 text-xs font-medium rounded-lg transition-all text-center @(State.CurrentMode == TimerMode.LongBreak ? "bg-white dark:bg-amber-600 text-slate-900 dark:text-white shadow-sm font-semibold" : "text-slate-600 dark:text-[#949BAF] hover:text-slate-900 dark:hover:text-white")" 
+                @onclick="() => State.SetMode(TimerMode.LongBreak)">
+            Long <span class="hidden sm:inline">(@State.Settings.LongBreakMinutes m)</span>
+        </button>
+    </div>
 
-        <!-- Sleek Arc Timer Frame -->
-        <div class="timer-display-frame">
-            <svg class="timer-svg" viewBox="0 0 230 230">
-                <circle class="timer-track-circle" cx="115" cy="115" r="98" />
-                <circle class="timer-progress-arc @GetProgressColorClass()"
-                        cx="115" cy="115" r="98"
-                        stroke-dasharray="@Circumference"
-                        stroke-dashoffset="@CalculateDashOffset()" />
-            </svg>
+    <!-- Circular Progress Frame -->
+    <div class="relative flex items-center justify-center my-4 py-2">
+        <svg class="w-56 h-56 sm:w-64 sm:h-64" viewBox="0 0 240 240">
+            <!-- Background circle track -->
+            <circle class="text-slate-100 dark:text-[#181C2B]" stroke-width="8" stroke="currentColor" fill="transparent" cx="120" cy="120" r="100" />
+            <!-- Active progress arc -->
+            <circle class="timer-svg-circle @GetProgressArcColor()" 
+                    stroke-width="8" 
+                    stroke="currentColor" 
+                    stroke-linecap="round"
+                    fill="transparent" 
+                    cx="120" 
+                    cy="120" 
+                    r="100"
+                    stroke-dasharray="@Circumference"
+                    stroke-dashoffset="@CalculateDashOffset()" />
+        </svg>
 
-            <div class="timer-digits-wrapper">
-                <div class="timer-digits">@FormattedTime</div>
-                @if (ActiveTask != null)
-                {
-                    <div class="timer-task-chip" title="@ActiveTask.Title">
-                        @ActiveTask.Title
-                    </div>
-                }
-                else
-                {
-                    <div class="timer-status-caption">Ready to focus</div>
-                }
-            </div>
-        </div>
-
-        <!-- Action Controls -->
-        <div class="timer-actions">
-            <button class="btn-ghost-icon" @onclick="() => State.ResetTimer()" title="Reset Timer">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                    <path d="M3 3v5h5"/>
-                </svg>
-            </button>
-
-            @if (!State.IsRunning)
+        <!-- Center Time & Target Display -->
+        <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-4 pointer-events-none">
+            <span class="text-4xl sm:text-5xl font-extrabold tracking-tight font-mono text-slate-900 dark:text-white select-none drop-shadow-sm">
+                @FormattedTime
+            </span>
+            @if (ActiveTask != null)
             {
-                <button class="btn-solid-primary" @onclick="() => State.StartTimer()">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                        <polygon points="5 3 19 12 5 21 5 3"/>
-                    </svg>
-                    <span>Start Focus</span>
-                </button>
+                <div class="mt-2 max-w-[170px] truncate px-2.5 py-1 rounded-full bg-slate-100 dark:bg-[#1A1F30] border border-slate-200 dark:border-[#1E2337] text-[11px] font-medium text-slate-700 dark:text-zinc-200 pointer-events-auto" title="@ActiveTask.Title">
+                    @ActiveTask.Title
+                </div>
             }
             else
             {
-                <button class="btn-solid-primary" style="background: var(--status-warning); color: #000;" @onclick="() => State.PauseTimer()">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                        <rect x="6" y="4" width="4" height="16"/>
-                        <rect x="14" y="4" width="4" height="16"/>
-                    </svg>
-                    <span>Pause</span>
-                </button>
+                <span class="text-xs text-slate-400 dark:text-[#949BAF] mt-1 tracking-wide font-medium">
+                    @(State.IsRunning ? "In progress..." : "Ready to focus")
+                </span>
             }
-
-            <button class="btn-ghost-icon" @onclick="() => State.SkipTimer()" title="Skip Session">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="5 4 15 12 5 20 5 4"/>
-                    <line x1="19" y1="5" x2="19" y2="19"/>
-                </svg>
-            </button>
         </div>
+    </div>
 
-        <!-- Cycle Progress Indicator -->
-        <div class="cycle-dots-row">
-            <span class="cycle-dots-label">Daily Target (@State.CompletedPomodoroCount / @State.Settings.DailyPomodoroGoal cycles)</span>
-            <div class="cycle-pills">
-                @for (int i = 0; i < State.Settings.DailyPomodoroGoal; i++)
-                {
-                    <div class="cycle-pill @(i < State.CompletedPomodoroCount ? "filled" : "")"></div>
-                }
-            </div>
+    <!-- Controls Row -->
+    <div class="flex items-center justify-center gap-3 sm:gap-4 my-2">
+        <button class="p-3 rounded-xl bg-slate-100 dark:bg-[#181C2B] text-slate-600 dark:text-[#949BAF] hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-[#1F253A] border border-slate-200 dark:border-[#1E2337] transition-all" 
+                @onclick="() => State.ResetTimer()" 
+                title="Reset Timer">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+            </svg>
+        </button>
+
+        @if (!State.IsRunning)
+        {
+            <button class="px-6 sm:px-8 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2" 
+                    @onclick="() => State.StartTimer()">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                <span>Start Session</span>
+            </button>
+        }
+        else
+        {
+            <button class="px-6 sm:px-8 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-sm shadow-md shadow-amber-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2" 
+                    @onclick="() => State.PauseTimer()">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="6" y="4" width="4" height="16"/>
+                    <rect x="14" y="4" width="4" height="16"/>
+                </svg>
+                <span>Pause</span>
+            </button>
+        }
+
+        <button class="p-3 rounded-xl bg-slate-100 dark:bg-[#181C2B] text-slate-600 dark:text-[#949BAF] hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-[#1F253A] border border-slate-200 dark:border-[#1E2337] transition-all" 
+                @onclick="() => State.SkipTimer()" 
+                title="Skip Session">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 4 15 12 5 20 5 4"/>
+                <line x1="19" y1="5" x2="19" y2="19"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Cycle Indicator Pills -->
+    <div class="mt-4 pt-4 border-t border-slate-100 dark:border-[#1E2337] flex flex-col gap-2">
+        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-[#949BAF]">
+            <span>Daily Goal Target</span>
+            <span class="font-mono font-medium">@State.CompletedPomodoroCount of @State.Settings.DailyPomodoroGoal completed</span>
+        </div>
+        <div class="flex items-center gap-1.5 overflow-x-auto py-1">
+            @for (int i = 0; i < State.Settings.DailyPomodoroGoal; i++)
+            {
+                <div class="flex-1 min-w-[12px] h-2 rounded-full transition-all duration-300 @(i < State.CompletedPomodoroCount ? "bg-indigo-500 shadow-sm shadow-indigo-500/30" : "bg-slate-200 dark:bg-[#1E2337]")"></div>
+            }
         </div>
     </div>
 </div>
 
 @code {
-    private const double Radius = 98;
+    private const double Radius = 100;
     private double Circumference => 2 * Math.PI * Radius;
 
     private TaskItem? ActiveTask => State.Tasks.FirstOrDefault(t => t.Id == State.ActiveTaskId);
@@ -122,12 +146,12 @@
         }
     }
 
-    private string GetProgressColorClass() => State.CurrentMode switch
+    private string GetProgressArcColor() => State.CurrentMode switch
     {
-        TimerMode.Work => "mode-work",
-        TimerMode.ShortBreak => "mode-short",
-        TimerMode.LongBreak => "mode-long",
-        _ => "mode-work"
+        TimerMode.Work => "text-indigo-500",
+        TimerMode.ShortBreak => "text-emerald-500",
+        TimerMode.LongBreak => "text-amber-500",
+        _ => "text-indigo-500"
     };
 
     private double CalculateDashOffset()

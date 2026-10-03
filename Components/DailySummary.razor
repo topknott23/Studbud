@@ -1,60 +1,82 @@
 @inject StudyStateService State
 @implements IDisposable
 
-<div class="stats-banner">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
     <!-- Metric 1: Focus Cycles -->
-    <div class="stat-tile">
-        <div class="stat-tile-header">
-            <span class="stat-tile-label">Cycles</span>
-            <span style="font-size: 0.75rem; color: var(--text-tertiary);">Daily Goal</span>
+    <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#121520] border border-slate-200/80 dark:border-[#1E2337] shadow-sm hover:border-indigo-500/40 dark:hover:border-indigo-500/40 transition-all group">
+        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-[#949BAF] mb-2">
+            <span class="font-medium">Cycles</span>
+            <span class="font-mono text-[11px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#1A1F30] text-slate-600 dark:text-zinc-300">Goal: @State.Settings.DailyPomodoroGoal</span>
         </div>
-        <div class="stat-tile-value">
-            @State.CompletedPomodoroCount <span style="font-size: 1.1rem; color: var(--text-tertiary); font-weight: 400;">/ @State.Settings.DailyPomodoroGoal</span>
+        <div class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-baseline gap-1 font-mono">
+            @State.CompletedPomodoroCount
+            <span class="text-xs sm:text-sm font-normal text-slate-400 dark:text-[#949BAF]">/ @State.Settings.DailyPomodoroGoal</span>
         </div>
-        <div class="stat-tile-sub">
-            @DailyGoalPercentage% completed
+        <div class="mt-3 flex items-center justify-between text-[11px] font-medium text-slate-500 dark:text-[#949BAF]">
+            <span>Progress</span>
+            <span class="text-indigo-600 dark:text-indigo-400 font-semibold">@DailyGoalPercentage%</span>
+        </div>
+        <!-- Progress mini bar -->
+        <div class="w-full bg-slate-100 dark:bg-[#1E2337] h-1.5 rounded-full mt-1.5 overflow-hidden">
+            <div class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: @DailyGoalPercentage%;"></div>
         </div>
     </div>
 
     <!-- Metric 2: Total Study Time -->
-    <div class="stat-tile">
-        <div class="stat-tile-header">
-            <span class="stat-tile-label">Focus Time</span>
-            <span style="font-size: 0.75rem; color: var(--text-tertiary);">Today</span>
+    <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#121520] border border-slate-200/80 dark:border-[#1E2337] shadow-sm hover:border-emerald-500/40 dark:hover:border-emerald-500/40 transition-all group">
+        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-[#949BAF] mb-2">
+            <span class="font-medium">Focus Time</span>
+            <span class="font-mono text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/30">Today</span>
         </div>
-        <div class="stat-tile-value">
+        <div class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-mono">
             @FormattedStudyTime
         </div>
-        <div class="stat-tile-sub">
-            @TodaySessionsCount sessions
+        <div class="mt-3 flex items-center justify-between text-[11px] font-medium text-slate-500 dark:text-[#949BAF]">
+            <span>Completed</span>
+            <span class="text-emerald-600 dark:text-emerald-400 font-semibold">@TodaySessionsCount sessions</span>
+        </div>
+        <!-- Progress mini bar -->
+        <div class="w-full bg-slate-100 dark:bg-[#1E2337] h-1.5 rounded-full mt-1.5 overflow-hidden">
+            <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: @(Math.Min(100, TodayTotalMinutes > 0 ? (TodayTotalMinutes * 100 / (State.Settings.DailyPomodoroGoal * State.Settings.WorkDurationMinutes)) : 0))%;"></div>
         </div>
     </div>
 
     <!-- Metric 3: Tasks Completed -->
-    <div class="stat-tile">
-        <div class="stat-tile-header">
-            <span class="stat-tile-label">Tasks</span>
-            <span style="font-size: 0.75rem; color: var(--text-tertiary);">Pending: @(State.Tasks.Count - CompletedTasksCount)</span>
+    <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#121520] border border-slate-200/80 dark:border-[#1E2337] shadow-sm hover:border-amber-500/40 dark:hover:border-amber-500/40 transition-all group">
+        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-[#949BAF] mb-2">
+            <span class="font-medium">Tasks</span>
+            <span class="font-mono text-[11px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#1A1F30] text-slate-600 dark:text-zinc-300">Pending: @(State.Tasks.Count - CompletedTasksCount)</span>
         </div>
-        <div class="stat-tile-value">
-            @CompletedTasksCount <span style="font-size: 1.1rem; color: var(--text-tertiary); font-weight: 400;">/ @State.Tasks.Count</span>
+        <div class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-baseline gap-1 font-mono">
+            @CompletedTasksCount
+            <span class="text-xs sm:text-sm font-normal text-slate-400 dark:text-[#949BAF]">/ @State.Tasks.Count</span>
         </div>
-        <div class="stat-tile-sub">
-            @(State.Tasks.Count > 0 ? (int)((double)CompletedTasksCount / State.Tasks.Count * 100) : 0)% task completion
+        <div class="mt-3 flex items-center justify-between text-[11px] font-medium text-slate-500 dark:text-[#949BAF]">
+            <span>Completion</span>
+            <span class="text-amber-600 dark:text-amber-400 font-semibold">@(State.Tasks.Count > 0 ? (int)((double)CompletedTasksCount / State.Tasks.Count * 100) : 0)%</span>
+        </div>
+        <!-- Progress mini bar -->
+        <div class="w-full bg-slate-100 dark:bg-[#1E2337] h-1.5 rounded-full mt-1.5 overflow-hidden">
+            <div class="bg-amber-500 h-full rounded-full transition-all duration-500" style="width: @(State.Tasks.Count > 0 ? (int)((double)CompletedTasksCount / State.Tasks.Count * 100) : 0)% ;"></div>
         </div>
     </div>
 
     <!-- Metric 4: Productivity Rate -->
-    <div class="stat-tile">
-        <div class="stat-tile-header">
-            <span class="stat-tile-label">Productivity</span>
-            <span style="font-size: 0.75rem; color: var(--status-success);">Active</span>
+    <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#121520] border border-slate-200/80 dark:border-[#1E2337] shadow-sm hover:border-rose-500/40 dark:hover:border-rose-500/40 transition-all group">
+        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-[#949BAF] mb-2">
+            <span class="font-medium">Focus Score</span>
+            <span class="font-mono text-[11px] px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200/50 dark:border-rose-800/30">Active</span>
         </div>
-        <div class="stat-tile-value">
+        <div class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white font-mono">
             @(Math.Min(100, (int)(DailyGoalPercentage * 1.25)))%
         </div>
-        <div class="stat-tile-sub">
-            Daily focus score
+        <div class="mt-3 flex items-center justify-between text-[11px] font-medium text-slate-500 dark:text-[#949BAF]">
+            <span>Efficiency</span>
+            <span class="text-rose-600 dark:text-rose-400 font-semibold">High Momentum</span>
+        </div>
+        <!-- Progress mini bar -->
+        <div class="w-full bg-slate-100 dark:bg-[#1E2337] h-1.5 rounded-full mt-1.5 overflow-hidden">
+            <div class="bg-rose-500 h-full rounded-full transition-all duration-500" style="width: @(Math.Min(100, (int)(DailyGoalPercentage * 1.25)))%;"></div>
         </div>
     </div>
 </div>
@@ -62,7 +84,6 @@
 @code {
     private int TodaySessionsCount => State.SessionHistory.Count(s => s.Mode == TimerMode.Work && s.CompletedAt.Date == DateTime.Today);
     private int TodayTotalMinutes => State.SessionHistory.Where(s => s.Mode == TimerMode.Work && s.CompletedAt.Date == DateTime.Today).Sum(s => s.DurationMinutes);
-
     private int CompletedTasksCount => State.Tasks.Count(t => t.IsCompleted);
 
     private int DailyGoalPercentage

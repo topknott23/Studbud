@@ -1,65 +1,157 @@
 @inherits LayoutComponentBase
 @inject IJSRuntime JS
 @inject StudyStateService State
+@inject NavigationManager Nav
 
-<div class="app-container">
-    <header class="top-navbar">
-        <div class="brand-section">
-            <div class="brand-dot"></div>
-            <span class="brand-title">Studbud</span>
-            <span class="brand-divider">/</span>
-            <span class="brand-subtitle">Study Planner & Focus Dashboard</span>
+<div class="min-h-screen flex flex-col bg-[#F8FAFC] dark:bg-[#0B0D14] text-slate-900 dark:text-[#EDEDED] font-sans antialiased transition-colors duration-200">
+    <!-- Modern Top Navigation Bar -->
+    <header class="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-[#1E2337] bg-white/80 dark:bg-[#0B0D14]/85 backdrop-blur-md transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            
+            <!-- Brand Logo & Workspace Info -->
+            <div class="flex items-center gap-6">
+                <a href="/" class="flex items-center gap-3 group focus:outline-none">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-sm shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+                        <div class="w-2.5 h-2.5 rounded-full bg-white animate-pulse"></div>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-bold text-base tracking-tight text-slate-900 dark:text-white">Studbud</span>
+                            <span class="text-[10px] font-semibold tracking-wide uppercase px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60">v2.0</span>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Navigation Links (Desktop) -->
+                <nav class="hidden md:flex items-center gap-1 ml-4 bg-slate-100/80 dark:bg-[#121520] p-1 rounded-xl border border-slate-200/80 dark:border-[#1E2337]">
+                    <NavLink href="" Match="NavLinkMatch.All" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-[#1A1F30] transition-all flex items-center gap-2 [&.active]:bg-white dark:[&.active]:bg-indigo-600 dark:[&.active]:text-white [&.active]:text-slate-900 [&.active]:shadow-sm">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <span>Timer</span>
+                    </NavLink>
+
+                    <NavLink href="planner" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-[#1A1F30] transition-all flex items-center gap-2 [&.active]:bg-white dark:[&.active]:bg-indigo-600 dark:[&.active]:text-white [&.active]:text-slate-900 [&.active]:shadow-sm">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 11l3 3L22 4"/>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                        </svg>
+                        <span>Planner</span>
+                    </NavLink>
+
+                    <NavLink href="analytics" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-[#1A1F30] transition-all flex items-center gap-2 [&.active]:bg-white dark:[&.active]:bg-indigo-600 dark:[&.active]:text-white [&.active]:text-slate-900 [&.active]:shadow-sm">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                        <span>Analytics</span>
+                    </NavLink>
+
+                    <NavLink href="flashcards" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-[#1A1F30] transition-all flex items-center gap-2 [&.active]:bg-white dark:[&.active]:bg-indigo-600 dark:[&.active]:text-white [&.active]:text-slate-900 [&.active]:shadow-sm">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                        </svg>
+                        <span>Flashcards</span>
+                    </NavLink>
+
+                    <NavLink href="settings" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-[#1A1F30] transition-all flex items-center gap-2 [&.active]:bg-white dark:[&.active]:bg-indigo-600 dark:[&.active]:text-white [&.active]:text-slate-900 [&.active]:shadow-sm">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                        <span>Settings</span>
+                    </NavLink>
+                </nav>
+            </div>
+
+            <!-- Right Controls: Status & Theme Toggle -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Active Timer Pill Badge -->
+                <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-[#121520] border border-slate-200 dark:border-[#1E2337] text-xs font-mono text-slate-700 dark:text-[#949BAF]">
+                    <span class="w-2 h-2 rounded-full @(State.IsRunning ? "bg-emerald-500 animate-ping" : "bg-zinc-400")"></span>
+                    <span>@(State.IsRunning ? "Active Focus" : "Paused")</span>
+                </div>
+
+                <!-- Theme Toggle Button -->
+                <button @onclick="ToggleTheme" 
+                        class="p-2 rounded-xl text-slate-600 dark:text-[#949BAF] hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#121520] border border-slate-200 dark:border-[#1E2337] hover:border-slate-300 dark:hover:border-[#2E3654] transition-all"
+                        title="Toggle Color Theme">
+                    @if (currentTheme == "dark")
+                    {
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                    }
+                    else
+                    {
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    }
+                </button>
+
+                <!-- Quick Preferences Modal Trigger -->
+                <button @onclick="() => showSettingsModal = true" 
+                        class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium text-slate-700 dark:text-[#EDEDED] bg-slate-100 dark:bg-[#121520] border border-slate-200 dark:border-[#1E2337] hover:border-slate-300 dark:hover:border-[#2E3654] transition-all">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    <span>Quick Config</span>
+                </button>
+            </div>
         </div>
 
-        <div class="header-actions">
-            <button class="btn-minimal" @onclick="ToggleTheme" title="Toggle Theme">
-                @if (currentTheme == "dark")
-                {
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                    <span>Light</span>
-                }
-                else
-                {
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                    <span>Dark</span>
-                }
-            </button>
-            <button class="btn-minimal" @onclick="() => showSettings = true" title="Preferences">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                </svg>
-                <span>Preferences</span>
-            </button>
+        <!-- Mobile Navigation Bar -->
+        <div class="md:hidden flex items-center justify-around border-t border-slate-200 dark:border-[#1E2337] py-2 px-2 bg-white/90 dark:bg-[#0B0D14]/90">
+            <NavLink href="" Match="NavLinkMatch.All" class="px-3 py-1 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] [&.active]:bg-indigo-600 [&.active]:text-white">
+                Timer
+            </NavLink>
+            <NavLink href="planner" class="px-3 py-1 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] [&.active]:bg-indigo-600 [&.active]:text-white">
+                Planner
+            </NavLink>
+            <NavLink href="analytics" class="px-3 py-1 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] [&.active]:bg-indigo-600 [&.active]:text-white">
+                Analytics
+            </NavLink>
+            <NavLink href="flashcards" class="px-3 py-1 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] [&.active]:bg-indigo-600 [&.active]:text-white">
+                Flashcards
+            </NavLink>
+            <NavLink href="settings" class="px-3 py-1 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] [&.active]:bg-indigo-600 [&.active]:text-white">
+                Settings
+            </NavLink>
         </div>
     </header>
 
-    <main>
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         @Body
     </main>
 
-    <footer style="margin-top: auto; padding-top: 3rem; text-align: center; color: var(--text-tertiary); font-size: 0.75rem;">
-        <span>Studbud • Minimalist Study & Pomodoro Workspace</span>
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-slate-200 dark:border-[#1E2337] py-6 text-center text-xs text-slate-500 dark:text-[#949BAF]">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <span>Studbud • Modern Study Planner & Pomodoro Workspace</span>
+            <span class="font-mono text-[11px] opacity-75">Automata • AppDev • Intelligent Systems • IM2</span>
+        </div>
     </footer>
 </div>
 
-<SettingsModal @bind-IsOpen="showSettings" />
+<SettingsModal @bind-IsOpen="showSettingsModal" />
 
 @code {
     private string currentTheme = "dark";
-    private bool showSettings = false;
+    private bool showSettingsModal = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

@@ -1,33 +1,39 @@
 @inject StudyStateService State
 @implements IDisposable
 
-<div class="minimal-card">
-    <div class="minimal-card-header">
-        <span class="minimal-card-title">Tasks</span>
-        <span style="font-size: 0.8rem; color: var(--text-tertiary); font-family: var(--font-mono);">
-            @CompletedCount/@State.Tasks.Count done
+<div class="rounded-2xl bg-white dark:bg-[#121520] border border-slate-200/80 dark:border-[#1E2337] p-5 sm:p-6 shadow-sm flex flex-col h-full">
+    <!-- Header -->
+    <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-[#1E2337] mb-4">
+        <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+            <span class="font-bold text-sm tracking-tight text-slate-900 dark:text-white">Study Tasks</span>
+        </div>
+        <span class="text-xs font-mono font-medium text-slate-500 dark:text-[#949BAF] px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#181C2B]">
+            @CompletedCount/@State.Tasks.Count completed
         </span>
     </div>
 
     <!-- Quick Task Add Box -->
-    <div class="task-quick-add">
+    <div class="p-3 bg-slate-50 dark:bg-[#161928] rounded-xl border border-slate-200/80 dark:border-[#1E2337] mb-4">
         <input type="text" 
-               class="task-quick-input" 
-               placeholder="Add a new task... (press Enter)" 
+               class="w-full bg-transparent text-sm font-medium placeholder-slate-400 dark:placeholder-[#949BAF] text-slate-900 dark:text-white focus:outline-none mb-3 px-1" 
+               placeholder="Add a new study task... (press Enter)" 
                @bind="newTaskTitle" 
                @bind:event="oninput"
                @onkeydown="HandleKeyDown" />
 
-        <div class="task-add-footer">
-            <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
-                <select class="select-clean" @bind="selectedSubject">
+        <div class="flex items-center justify-between gap-2 flex-wrap pt-2 border-t border-slate-200/50 dark:border-[#1E2337]/60">
+            <div class="flex items-center gap-2 flex-wrap">
+                <select class="text-xs py-1.5 px-2.5 rounded-lg bg-white dark:bg-[#121520] border border-slate-200 dark:border-[#1E2337] text-slate-700 dark:text-[#EDEDED] focus:outline-none focus:ring-1 focus:ring-indigo-500" 
+                        @bind="selectedSubject">
                     @foreach (var sub in State.Subjects)
                     {
                         <option value="@sub.Name">@sub.Name</option>
                     }
                 </select>
 
-                <select class="select-clean" @bind="estimatedPomodoros">
+                <select class="text-xs py-1.5 px-2.5 rounded-lg bg-white dark:bg-[#121520] border border-slate-200 dark:border-[#1E2337] text-slate-700 dark:text-[#EDEDED] focus:outline-none focus:ring-1 focus:ring-indigo-500" 
+                        @bind="estimatedPomodoros">
                     <option value="1">1 cycle (25m)</option>
                     <option value="2">2 cycles (50m)</option>
                     <option value="3">3 cycles (75m)</option>
@@ -35,21 +41,26 @@
                 </select>
             </div>
 
-            <button class="btn-add-minimal" @onclick="AddTask" disabled="@string.IsNullOrWhiteSpace(newTaskTitle)">
-                Add
+            <button class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed" 
+                    @onclick="AddTask" 
+                    disabled="@string.IsNullOrWhiteSpace(newTaskTitle)">
+                Add Task
             </button>
         </div>
     </div>
 
-    <!-- Minimal Filter Tabs -->
-    <div class="filter-row">
-        <button class="filter-btn @(activeFilter == "All" ? "active" : "")" @onclick='() => activeFilter = "All"'>
+    <!-- Filter Pills (Scrollable) -->
+    <div class="flex items-center gap-1.5 overflow-x-auto pb-3 mb-3 border-b border-slate-100 dark:border-[#1E2337]">
+        <button class="px-2.5 py-1 text-xs rounded-lg font-medium whitespace-nowrap transition-all @(activeFilter == "All" ? "bg-slate-900 text-white dark:bg-indigo-600 dark:text-white" : "text-slate-600 dark:text-[#949BAF] hover:bg-slate-100 dark:hover:bg-[#1A1F30]")" 
+                @onclick='() => activeFilter = "All"'>
             All (@State.Tasks.Count)
         </button>
-        <button class="filter-btn @(activeFilter == "Active" ? "active" : "")" @onclick='() => activeFilter = "Active"'>
+        <button class="px-2.5 py-1 text-xs rounded-lg font-medium whitespace-nowrap transition-all @(activeFilter == "Active" ? "bg-slate-900 text-white dark:bg-indigo-600 dark:text-white" : "text-slate-600 dark:text-[#949BAF] hover:bg-slate-100 dark:hover:bg-[#1A1F30]")" 
+                @onclick='() => activeFilter = "Active"'>
             Active (@(State.Tasks.Count - CompletedCount))
         </button>
-        <button class="filter-btn @(activeFilter == "Completed" ? "active" : "")" @onclick='() => activeFilter = "Completed"'>
+        <button class="px-2.5 py-1 text-xs rounded-lg font-medium whitespace-nowrap transition-all @(activeFilter == "Completed" ? "bg-slate-900 text-white dark:bg-indigo-600 dark:text-white" : "text-slate-600 dark:text-[#949BAF] hover:bg-slate-100 dark:hover:bg-[#1A1F30]")" 
+                @onclick='() => activeFilter = "Completed"'>
             Done (@CompletedCount)
         </button>
         @foreach (var sub in State.Subjects)
@@ -57,7 +68,8 @@
             var count = State.Tasks.Count(t => t.Subject == sub.Name);
             if (count > 0)
             {
-                <button class="filter-btn @(activeFilter == sub.Name ? "active" : "")" @onclick="() => activeFilter = sub.Name">
+                <button class="px-2.5 py-1 text-xs rounded-lg font-medium whitespace-nowrap transition-all @(activeFilter == sub.Name ? "bg-slate-900 text-white dark:bg-indigo-600 dark:text-white" : "text-slate-600 dark:text-[#949BAF] hover:bg-slate-100 dark:hover:bg-[#1A1F30]")" 
+                        @onclick="() => activeFilter = sub.Name">
                     @sub.Name (@count)
                 </button>
             }
@@ -65,7 +77,7 @@
     </div>
 
     <!-- Tasks List Items -->
-    <div class="task-items-container">
+    <div class="flex-1 space-y-2.5 overflow-y-auto max-h-[460px] pr-1">
         @if (FilteredTasks.Any())
         {
             @foreach (var task in FilteredTasks)
@@ -73,31 +85,32 @@
                 var subjectDef = State.Subjects.FirstOrDefault(s => s.Name == task.Subject);
                 var isFocused = State.ActiveTaskId == task.Id;
 
-                <div class="task-row @(task.IsCompleted ? "completed" : "") @(isFocused ? "is-focus-target" : "")">
-                    <div class="task-main-col">
-                        <!-- Custom Minimal Checkbox -->
-                        <div class="checkbox-minimal @(task.IsCompleted ? "checked" : "")" 
-                             @onclick="() => ToggleTask(task.Id)"
-                             title="Mark as @(task.IsCompleted ? "incomplete" : "complete")">
+                <div class="group flex items-center justify-between p-3 rounded-xl border transition-all @(task.IsCompleted ? "bg-slate-50/60 dark:bg-[#10121C]/60 border-slate-200/50 dark:border-[#1E2337]/40 opacity-70" : (isFocused ? "bg-indigo-50/40 dark:bg-indigo-950/20 border-indigo-300 dark:border-indigo-800/80 shadow-sm" : "bg-white dark:bg-[#141724] border-slate-200/70 dark:border-[#1E2337] hover:border-slate-300 dark:hover:border-[#2E3654]"))">
+                    
+                    <div class="flex items-center gap-3 min-w-0 flex-1">
+                        <!-- Custom Checkbox -->
+                        <button class="w-5 h-5 rounded-md border flex items-center justify-center transition-all @(task.IsCompleted ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-300 dark:border-[#2E3654] hover:border-indigo-500")" 
+                                @onclick="() => ToggleTask(task.Id)"
+                                title="Toggle Complete">
                             @if (task.IsCompleted)
                             {
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                                <svg class="w-3.5 h-3.5 stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                                     <polyline points="20 6 9 17 4 12"></polyline>
                                 </svg>
                             }
-                        </div>
+                        </button>
 
-                        <!-- Task Info -->
-                        <div class="task-details">
-                            <span class="task-name" title="@task.Title">
+                        <!-- Task Text & Tags -->
+                        <div class="min-w-0 flex-1">
+                            <div class="text-xs sm:text-sm font-semibold truncate text-slate-800 dark:text-zinc-100 @(task.IsCompleted ? "line-through text-slate-400 dark:text-zinc-500" : "")">
                                 @task.Title
-                            </span>
-                            <div class="task-tags">
-                                <span class="subject-tag-clean">
-                                    <span class="subject-dot" style="background: @(subjectDef?.Color ?? "var(--text-tertiary)");"></span>
+                            </div>
+                            <div class="flex items-center gap-2 mt-1 flex-wrap text-[11px]">
+                                <span class="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1A1F30] text-slate-600 dark:text-zinc-300 font-medium">
+                                    <span class="w-1.5 h-1.5 rounded-full" style="background: @(subjectDef?.Color ?? "#6366F1");"></span>
                                     @task.Subject
                                 </span>
-                                <span class="cycle-tag-clean">
+                                <span class="font-mono text-slate-500 dark:text-[#949BAF]">
                                     @task.CompletedPomodoros/@task.EstimatedPomodoros cycles
                                 </span>
                             </div>
@@ -105,20 +118,20 @@
                     </div>
 
                     <!-- Actions -->
-                    <div class="task-row-actions">
+                    <div class="flex items-center gap-1.5 ml-2">
                         @if (!task.IsCompleted)
                         {
-                            <button class="btn-icon-subtle" 
-                                    style="@(isFocused ? "color: var(--text-primary); font-weight: 600;" : "")"
+                            <button class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all @(isFocused ? "bg-indigo-600 text-white shadow-sm" : "bg-slate-100 dark:bg-[#1E2337] text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white")" 
                                     @onclick="() => SetActiveFocus(task.Id)"
-                                    title="@(isFocused ? "Active in timer" : "Focus on this task")">
+                                    title="@(isFocused ? "Active focus target" : "Focus on this task in timer")">
                                 @(isFocused ? "Active" : "Focus")
                             </button>
                         }
-                        <button class="btn-icon-subtle delete" 
+                        
+                        <button class="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all opacity-0 group-hover:opacity-100" 
                                 @onclick="() => DeleteTask(task.Id)" 
                                 title="Delete Task">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="3 6 5 6 21 6"></polyline>
                                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                             </svg>
@@ -129,8 +142,8 @@
         }
         else
         {
-            <div class="empty-placeholder">
-                No tasks to display in this view.
+            <div class="py-12 text-center text-xs text-slate-400 dark:text-[#949BAF] bg-slate-50/50 dark:bg-[#161928]/30 rounded-xl border border-dashed border-slate-200 dark:border-[#1E2337]">
+                No tasks to display for this filter.
             </div>
         }
     </div>

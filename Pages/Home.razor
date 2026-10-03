@@ -1,20 +1,20 @@
 @page "/"
 
-<PageTitle>Studbud | Study Planner & Pomodoro</PageTitle>
+<PageTitle>Studbud | Study Planner & Pomodoro Workspace</PageTitle>
 
 <!-- Top Stat Summary Banner -->
 <DailySummary />
 
 <!-- Main Dashboard Grid -->
-<div class="dashboard-grid">
-    <!-- Left Column: Timer & History -->
-    <div class="dashboard-column">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    <!-- Left Column: Timer & History (5 cols on lg) -->
+    <div class="lg:col-span-5 space-y-6">
         <TimerCard />
         <SessionHistory />
     </div>
 
-    <!-- Right Column: Task Checklist -->
-    <div class="dashboard-column">
+    <!-- Right Column: Task Checklist (7 cols on lg) -->
+    <div class="lg:col-span-7">
         <TaskList />
     </div>
 </div>
