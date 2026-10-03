@@ -54,18 +54,10 @@ public class StudyStateService : IDisposable
             if (!string.IsNullOrEmpty(tasksJson))
             {
                 var loadedTasks = JsonSerializer.Deserialize<List<TaskItem>>(tasksJson);
-                if (loadedTasks != null && loadedTasks.Count > 0)
+                if (loadedTasks != null)
                 {
                     Tasks = loadedTasks;
                 }
-                else
-                {
-                    SeedDefaultTasks();
-                }
-            }
-            else
-            {
-                SeedDefaultTasks();
             }
 
             var historyJson = await _js.InvokeAsync<string?>("localStorage.getItem", "study_history");
@@ -77,10 +69,6 @@ public class StudyStateService : IDisposable
                     SessionHistory = loadedHistory;
                     CompletedPomodoroCount = SessionHistory.Count(s => s.Mode == TimerMode.Work && s.CompletedAt.Date == DateTime.Today);
                 }
-            }
-            else
-            {
-                SeedDefaultHistory();
             }
 
             var decksJson = await _js.InvokeAsync<string?>("localStorage.getItem", "study_flashcards");
@@ -103,104 +91,11 @@ public class StudyStateService : IDisposable
         }
         catch
         {
-            if (Tasks.Count == 0) SeedDefaultTasks();
-            if (SessionHistory.Count == 0) SeedDefaultHistory();
             if (FlashcardDecks.Count == 0) SeedDefaultFlashcards();
         }
 
         SetMode(TimerMode.Work);
         NotifyStateChanged();
-    }
-
-    private void SeedDefaultTasks()
-    {
-        Tasks = new List<TaskItem>
-        {
-            new TaskItem 
-            { 
-                Title = "Implement Finite State Machine Transition Diagram", 
-                Description = "Draw state transitions for DFA and NFA string recognition exercises", 
-                Subject = "Automata Theory", 
-                Priority = TaskPriority.High, 
-                Status = StudyTaskStatus.InProgress, 
-                EstimatedPomodoros = 3, 
-                CompletedPomodoros = 2, 
-                IsCompleted = false,
-                DueDate = DateTime.Today.AddDays(1)
-            },
-            new TaskItem 
-            { 
-                Title = "Migrate Blazor WebAssembly Dashboard to Tailwind CSS", 
-                Description = "Integrate Tailwind CDN, refactor UI components and create responsive layout", 
-                Subject = "Application Development", 
-                Priority = TaskPriority.High, 
-                Status = StudyTaskStatus.InProgress, 
-                EstimatedPomodoros = 4, 
-                CompletedPomodoros = 3, 
-                IsCompleted = false,
-                DueDate = DateTime.Today
-            },
-            new TaskItem 
-            { 
-                Title = "Train Neural Network Classification Model", 
-                Description = "Run forward and backpropagation tuning with cross-entropy loss", 
-                Subject = "Intelligent Systems", 
-                Priority = TaskPriority.Medium, 
-                Status = StudyTaskStatus.Done, 
-                EstimatedPomodoros = 2, 
-                CompletedPomodoros = 2, 
-                IsCompleted = true, 
-                CompletedAt = DateTime.Now.AddHours(-1) 
-            },
-            new TaskItem 
-            { 
-                Title = "Prepare Business Model Canvas & Value Proposition", 
-                Description = "Refine customer segments, revenue streams, and cost structures", 
-                Subject = "Technopreneurship", 
-                Priority = TaskPriority.Medium, 
-                Status = StudyTaskStatus.Todo, 
-                EstimatedPomodoros = 2, 
-                CompletedPomodoros = 0, 
-                IsCompleted = false,
-                DueDate = DateTime.Today.AddDays(3)
-            },
-            new TaskItem 
-            { 
-                Title = "Solve Linear Programming Simplex Method Problems", 
-                Description = "Formulate dual problem and solve tableau iterations for optimal cost", 
-                Subject = "Quantitative Methods", 
-                Priority = TaskPriority.High, 
-                Status = StudyTaskStatus.Todo, 
-                EstimatedPomodoros = 3, 
-                CompletedPomodoros = 1, 
-                IsCompleted = false,
-                DueDate = DateTime.Today.AddDays(2)
-            },
-            new TaskItem 
-            { 
-                Title = "Design 3NF Relational Schema & B-Tree Indexes", 
-                Description = "Eliminate transitive dependencies and write DDL queries", 
-                Subject = "Information Management 2", 
-                Priority = TaskPriority.Low, 
-                Status = StudyTaskStatus.Todo, 
-                EstimatedPomodoros = 2, 
-                CompletedPomodoros = 0, 
-                IsCompleted = false,
-                DueDate = DateTime.Today.AddDays(4)
-            }
-        };
-    }
-
-    private void SeedDefaultHistory()
-    {
-        SessionHistory = new List<SessionRecord>
-        {
-            new SessionRecord { Mode = TimerMode.Work, Subject = "Application Development", TaskTitle = "Migrate Blazor WebAssembly Dashboard to Tailwind CSS", DurationMinutes = 25, CompletedAt = DateTime.Now.AddHours(-3) },
-            new SessionRecord { Mode = TimerMode.Work, Subject = "Intelligent Systems", TaskTitle = "Train Neural Network Classification Model", DurationMinutes = 25, CompletedAt = DateTime.Now.AddHours(-2) },
-            new SessionRecord { Mode = TimerMode.Work, Subject = "Automata Theory", TaskTitle = "Implement Finite State Machine Transition Diagram", DurationMinutes = 25, CompletedAt = DateTime.Now.AddHours(-1) },
-            new SessionRecord { Mode = TimerMode.ShortBreak, Subject = "Break", TaskTitle = "Hydration & Rest", DurationMinutes = 5, CompletedAt = DateTime.Now.AddMinutes(-35) }
-        };
-        CompletedPomodoroCount = SessionHistory.Count(s => s.Mode == TimerMode.Work && s.CompletedAt.Date == DateTime.Today);
     }
 
     private void SeedDefaultFlashcards()
@@ -553,15 +448,20 @@ public class StudyStateService : IDisposable
         NotifyStateChanged();
     }
 
+    public async Task ClearAllTasksAsync()
+    {
+        Tasks.Clear();
+        ActiveTaskId = null;
+        await SaveDataAsync();
+        NotifyStateChanged();
+    }
+
     public async Task ResetAllDataAsync()
     {
         Tasks.Clear();
         SessionHistory.Clear();
-        FlashcardDecks.Clear();
-        SeedDefaultTasks();
-        SeedDefaultHistory();
-        SeedDefaultFlashcards();
-        CompletedPomodoroCount = SessionHistory.Count(s => s.Mode == TimerMode.Work && s.CompletedAt.Date == DateTime.Today);
+        ActiveTaskId = null;
+        CompletedPomodoroCount = 0;
         await SaveDataAsync();
         NotifyStateChanged();
     }

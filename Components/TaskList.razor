@@ -8,9 +8,17 @@
             <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
             <span class="font-bold text-sm tracking-tight text-slate-900 dark:text-white">Study Tasks</span>
         </div>
-        <span class="text-xs font-mono font-medium text-slate-500 dark:text-[#949BAF] px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#181C2B]">
-            @CompletedCount/@State.Tasks.Count completed
-        </span>
+        <div class="flex items-center gap-2">
+            @if (State.Tasks.Any())
+            {
+                <button class="text-xs text-slate-400 hover:text-rose-500 transition-colors" @onclick="() => State.ClearAllTasksAsync()">
+                    Clear
+                </button>
+            }
+            <span class="text-xs font-mono font-medium text-slate-500 dark:text-[#949BAF] px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#181C2B]">
+                @CompletedCount/@State.Tasks.Count completed
+            </span>
+        </div>
     </div>
 
     <!-- Quick Task Add Box -->
