@@ -75,88 +75,16 @@ public class StudyStateService : IDisposable
             if (!string.IsNullOrEmpty(decksJson))
             {
                 var loadedDecks = JsonSerializer.Deserialize<List<FlashcardDeck>>(decksJson);
-                if (loadedDecks != null && loadedDecks.Count > 0)
+                if (loadedDecks != null)
                 {
                     FlashcardDecks = loadedDecks;
                 }
-                else
-                {
-                    SeedDefaultFlashcards();
-                }
-            }
-            else
-            {
-                SeedDefaultFlashcards();
             }
         }
-        catch
-        {
-            if (FlashcardDecks.Count == 0) SeedDefaultFlashcards();
-        }
+        catch { }
 
         SetMode(TimerMode.Work);
         NotifyStateChanged();
-    }
-
-    private void SeedDefaultFlashcards()
-    {
-        FlashcardDecks = new List<FlashcardDeck>
-        {
-            new FlashcardDeck
-            {
-                Title = "Automata & Computability",
-                Subject = "Automata Theory",
-                Description = "Essential definitions of DFAs, NFAs, Grammars, and Turing Machines",
-                Color = "#6366F1",
-                Cards = new List<FlashcardItem>
-                {
-                    new FlashcardItem { Question = "What is a Deterministic Finite Automaton (DFA)?", Answer = "A 5-tuple (Q, Σ, δ, q0, F) where for every state and input symbol, there is exactly one transition state.", Subject = "Automata Theory", IsMastered = true },
-                    new FlashcardItem { Question = "What is the Pumping Lemma used for?", Answer = "To prove by contradiction that a given formal language is NOT regular.", Subject = "Automata Theory", IsMastered = false },
-                    new FlashcardItem { Question = "What distinguishes a Pushdown Automaton (PDA) from a Finite Automaton?", Answer = "A PDA has an infinite stack memory, allowing it to recognize context-free languages (e.g. balanced parentheses).", Subject = "Automata Theory", IsMastered = false },
-                    new FlashcardItem { Question = "What is the Church-Turing Thesis?", Answer = "The hypothesis that any function that can be algorithmically computed can be computed by a Turing Machine.", Subject = "Automata Theory", IsMastered = true }
-                }
-            },
-            new FlashcardDeck
-            {
-                Title = "Web Dev & Blazor Architecture",
-                Subject = "Application Development",
-                Description = "Core concepts in Blazor WebAssembly, component lifecycle, and state",
-                Color = "#3B82F6",
-                Cards = new List<FlashcardItem>
-                {
-                    new FlashcardItem { Question = "What is Blazor WebAssembly?", Answer = "A single-page application (SPA) framework that runs C# code directly in the browser via WebAssembly (WASM).", Subject = "Application Development", IsMastered = true },
-                    new FlashcardItem { Question = "What is the purpose of StateHasChanged()?", Answer = "Notifies the component that its state has changed, causing Blazor to re-render the UI.", Subject = "Application Development", IsMastered = true },
-                    new FlashcardItem { Question = "How does two-way data binding work in Blazor?", Answer = "Using the @bind directive, which links an HTML input element's value with a C# property.", Subject = "Application Development", IsMastered = false },
-                    new FlashcardItem { Question = "Why use Tailwind CSS utility-first classes?", Answer = "It allows rapid, expressive UI development directly in markup without writing separate custom CSS selectors.", Subject = "Application Development", IsMastered = true }
-                }
-            },
-            new FlashcardDeck
-            {
-                Title = "Intelligent Systems & ML",
-                Subject = "Intelligent Systems",
-                Description = "Neural networks, backpropagation, and search heuristics",
-                Color = "#10B981",
-                Cards = new List<FlashcardItem>
-                {
-                    new FlashcardItem { Question = "What is Backpropagation?", Answer = "An optimization algorithm that computes the gradient of the loss function with respect to weights using the chain rule.", Subject = "Intelligent Systems", IsMastered = false },
-                    new FlashcardItem { Question = "What is the A* Search Algorithm?", Answer = "A best-first search algorithm that finds the shortest path using f(n) = g(n) + h(n), where g is exact cost and h is heuristic.", Subject = "Intelligent Systems", IsMastered = true },
-                    new FlashcardItem { Question = "What is Overfitting in Machine Learning?", Answer = "When a model learns the training data and noise too closely, leading to poor generalization on unseen test data.", Subject = "Intelligent Systems", IsMastered = false }
-                }
-            },
-            new FlashcardDeck
-            {
-                Title = "Database Systems & IM 2",
-                Subject = "Information Management 2",
-                Description = "Database normalization, B-trees, ACID properties, and query optimization",
-                Color = "#06B6D4",
-                Cards = new List<FlashcardItem>
-                {
-                    new FlashcardItem { Question = "What is Third Normal Form (3NF)?", Answer = "A relation in 2NF where every non-prime attribute is non-transitively dependent on every candidate key.", Subject = "Information Management 2", IsMastered = true },
-                    new FlashcardItem { Question = "What does ACID stand for in DBMS?", Answer = "Atomicity, Consistency, Isolation, and Durability — the 4 key guarantees of transactional database engines.", Subject = "Information Management 2", IsMastered = true },
-                    new FlashcardItem { Question = "Why use B+ Tree indexes for databases?", Answer = "B+ Trees maintain sorted data with balanced O(log n) lookup, insertion, and efficient range queries.", Subject = "Information Management 2", IsMastered = false }
-                }
-            }
-        };
     }
 
     // Timer Controls

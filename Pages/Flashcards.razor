@@ -2,14 +2,19 @@
 @inject StudyStateService State
 @implements IDisposable
 
-<PageTitle>Flashcards & Quick Review | Studbud</PageTitle>
+<PageTitle>Flashcards & Active Recall | Studbud</PageTitle>
 
 <div class="space-y-6">
     <!-- Header -->
     <div class="bg-white dark:bg-[#121520] p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-[#1E2337] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Active Recall & Flashcards</h1>
-            <p class="text-xs sm:text-sm text-slate-500 dark:text-[#949BAF] mt-0.5">Test your concept mastery across core computer science & information management courses.</p>
+            <div class="flex items-center gap-2 mb-1">
+                <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Active Recall & Flashcards</h1>
+                <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40">
+                    To be added later
+                </span>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-[#949BAF]">Active recall study mode and spaced repetition cards will be integrated with persistent database support.</p>
         </div>
 
         <div class="flex items-center gap-3">
@@ -19,142 +24,195 @@
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
-                <span>New Deck</span>
+                <span>Create Custom Deck</span>
             </button>
         </div>
     </div>
 
-    <!-- Deck Selection Row (Cards Grid) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        @foreach (var deck in State.FlashcardDecks)
-        {
-            var isSelected = activeDeckId == deck.Id;
-            var masteredCount = deck.Cards.Count(c => c.IsMastered);
-            var masteryPercent = deck.Cards.Count > 0 ? (int)((double)masteredCount / deck.Cards.Count * 100) : 0;
-
-            <div class="p-4 rounded-2xl border transition-all cursor-pointer @(isSelected ? "bg-indigo-50/50 dark:bg-indigo-950/20 border-indigo-500 shadow-sm" : "bg-white dark:bg-[#121520] border-slate-200/80 dark:border-[#1E2337] hover:border-slate-300 dark:hover:border-[#2E3654]")" 
-                 @onclick="() => SelectDeck(deck.Id)">
-                <div class="flex items-center justify-between gap-2 mb-2">
-                    <span class="w-2.5 h-2.5 rounded-full" style="background: @deck.Color;"></span>
-                    <span class="text-[11px] font-mono text-slate-500 dark:text-[#949BAF]">@deck.Cards.Count cards</span>
-                </div>
-                <h4 class="text-sm font-bold text-slate-900 dark:text-white truncate">@deck.Title</h4>
-                <p class="text-[11px] text-slate-500 dark:text-[#949BAF] mt-1 line-clamp-1">@deck.Subject</p>
-
-                <!-- Mastery Mini Bar -->
-                <div class="mt-3">
-                    <div class="flex items-center justify-between text-[10px] text-slate-400 mb-1">
-                        <span>Mastery</span>
-                        <span class="font-bold text-slate-700 dark:text-zinc-300">@masteryPercent%</span>
-                    </div>
-                    <div class="w-full bg-slate-100 dark:bg-[#1A1F30] h-1.5 rounded-full overflow-hidden">
-                        <div class="bg-indigo-500 h-full rounded-full transition-all duration-300" style="width: @masteryPercent%;"></div>
-                    </div>
-                </div>
-            </div>
-        }
-    </div>
-
-    @if (CurrentDeck != null && CurrentDeck.Cards.Any())
+    @if (!State.FlashcardDecks.Any())
     {
-        var currentCard = CurrentDeck.Cards[currentCardIndex];
+        <!-- Prominent To-Be-Added Later Banner -->
+        <div class="bg-white dark:bg-[#121520] p-8 sm:p-12 rounded-2xl border border-slate-200/80 dark:border-[#1E2337] shadow-sm text-center max-w-3xl mx-auto flex flex-col items-center">
+            <div class="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-4 shadow-glow-indigo">
+                <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
+            </div>
 
-        <!-- Active Flashcard Study Arena -->
-        <div class="bg-white dark:bg-[#121520] p-6 sm:p-8 rounded-2xl border border-slate-200/80 dark:border-[#1E2337] shadow-sm flex flex-col items-center max-w-2xl mx-auto">
+            <h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-2">
+                Flashcards Engine — To Be Added Later
+            </h3>
             
-            <!-- Arena Header / Progress -->
-            <div class="w-full flex items-center justify-between pb-4 border-b border-slate-100 dark:border-[#1E2337] mb-6">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold text-slate-700 dark:text-zinc-200">@CurrentDeck.Title</span>
-                    <span class="text-slate-400">•</span>
-                    <span class="text-xs text-slate-500 font-mono">Card @(currentCardIndex + 1) of @CurrentDeck.Cards.Count</span>
-                </div>
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-[#949BAF] max-w-xl leading-relaxed mb-6">
+                This section is reserved for interactive study decks and spaced repetition algorithms. Full persistence will be connected once the database backend is configured.
+            </p>
 
-                <button class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1" @onclick="() => showAddCardModal = true">
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    <span>Add Card</span>
-                </button>
-            </div>
-
-            <!-- 3D Interactive Card Frame -->
-            <div class="w-full h-72 sm:h-80 perspective-1000 cursor-pointer select-none" @onclick="ToggleFlip">
-                <div class="relative w-full h-full transform-style-3d transition-transform duration-500 @(isFlipped ? "rotate-y-180" : "")">
-                    
-                    <!-- Front (Question) -->
-                    <div class="absolute inset-0 backface-hidden rounded-2xl p-6 sm:p-8 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-[#151928] dark:to-[#1A1F33] border-2 border-slate-200 dark:border-[#2A314B] flex flex-col justify-between shadow-lg">
-                        <div class="flex items-center justify-between text-xs text-slate-500 dark:text-[#949BAF]">
-                            <span class="font-mono uppercase tracking-wider font-semibold">Question</span>
-                            <span class="text-[11px] px-2 py-0.5 rounded-full bg-slate-200/70 dark:bg-[#121520]">Click card to reveal answer</span>
-                        </div>
-
-                        <div class="text-center px-4">
-                            <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-relaxed">
-                                @currentCard.Question
-                            </h3>
-                        </div>
-
-                        <div class="flex items-center justify-between text-xs text-slate-400">
-                            <span>@CurrentDeck.Subject</span>
-                            <span>@(currentCard.IsMastered ? "⭐ Mastered" : "⏳ In Progress")</span>
-                        </div>
+            <!-- Upcoming Features Roadmap Pills -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full mb-6 text-left">
+                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-[#161928] border border-slate-200/60 dark:border-[#1E2337]">
+                    <div class="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-1">
+                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                        <span>Database Sync</span>
                     </div>
+                    <div class="text-[11px] text-slate-400">Save custom cards and decks across user sessions & devices.</div>
+                </div>
 
-                    <!-- Back (Answer) -->
-                    <div class="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl p-6 sm:p-8 bg-gradient-to-br from-indigo-900 to-indigo-950 text-white border-2 border-indigo-500 flex flex-col justify-between shadow-2xl">
-                        <div class="flex items-center justify-between text-xs text-indigo-300">
-                            <span class="font-mono uppercase tracking-wider font-semibold">Answer Explanation</span>
-                            <span class="text-[11px] px-2 py-0.5 rounded-full bg-indigo-950/80">Click card to flip back</span>
-                        </div>
-
-                        <div class="text-center px-4">
-                            <p class="text-sm sm:text-base font-medium text-slate-100 leading-relaxed">
-                                @currentCard.Answer
-                            </p>
-                        </div>
-
-                        <div class="flex items-center justify-between text-xs text-indigo-300">
-                            <span>@CurrentDeck.Subject</span>
-                            <span>Review Count: @currentCard.ReviewCount</span>
-                        </div>
+                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-[#161928] border border-slate-200/60 dark:border-[#1E2337]">
+                    <div class="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span>Spaced Repetition</span>
                     </div>
+                    <div class="text-[11px] text-slate-400">Smart intervals based on SuperMemo/SM-2 mastery ratings.</div>
+                </div>
+
+                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-[#161928] border border-slate-200/60 dark:border-[#1E2337]">
+                    <div class="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5 mb-1">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span>Course Tagging</span>
+                    </div>
+                    <div class="text-[11px] text-slate-400">Organize flashcards by Automata, AppDev, IM 2 & Intelligent Systems.</div>
                 </div>
             </div>
 
-            <!-- Self-Assessment Rating Controls -->
-            <div class="w-full flex items-center justify-between gap-3 mt-6 pt-4 border-t border-slate-100 dark:border-[#1E2337]">
-                <!-- Prev Button -->
-                <button class="p-2.5 rounded-xl bg-slate-100 dark:bg-[#181C2B] text-slate-600 dark:text-[#949BAF] hover:text-slate-900 dark:hover:text-white transition-all disabled:opacity-30" 
-                        @onclick="PrevCard" 
-                        disabled="@(currentCardIndex <= 0)">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
-                </button>
-
-                <!-- Mastery Toggle Buttons -->
-                <div class="flex items-center gap-2 sm:gap-3">
-                    <button class="px-4 py-2 rounded-xl text-xs font-semibold bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/40 hover:bg-rose-100 transition-all flex items-center gap-1.5"
-                            @onclick="() => RateCard(false)">
-                        <span>Needs Practice</span>
-                    </button>
-                    <button class="px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40 hover:bg-emerald-100 transition-all flex items-center gap-1.5"
-                            @onclick="() => RateCard(true)">
-                        <span>Mastered</span>
-                    </button>
-                </div>
-
-                <!-- Next Button -->
-                <button class="p-2.5 rounded-xl bg-slate-100 dark:bg-[#181C2B] text-slate-600 dark:text-[#949BAF] hover:text-slate-900 dark:hover:text-white transition-all disabled:opacity-30" 
-                        @onclick="NextCard" 
-                        disabled="@(currentCardIndex >= CurrentDeck.Cards.Count - 1)">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </button>
-            </div>
+            <button class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-md shadow-indigo-600/20 transition-all flex items-center gap-2"
+                    @onclick="() => showNewDeckModal = true">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Create a Custom Study Deck Now</span>
+            </button>
         </div>
     }
     else
     {
-        <div class="bg-white dark:bg-[#121520] p-12 rounded-2xl border border-slate-200/80 dark:border-[#1E2337] text-center text-xs text-slate-400">
-            No deck selected or deck has no flashcards. Click "New Deck" or add cards to begin.
+        <!-- Deck Selection Row (Cards Grid) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            @foreach (var deck in State.FlashcardDecks)
+            {
+                var isSelected = activeDeckId == deck.Id;
+                var masteredCount = deck.Cards.Count(c => c.IsMastered);
+                var masteryPercent = deck.Cards.Count > 0 ? (int)((double)masteredCount / deck.Cards.Count * 100) : 0;
+
+                <div class="p-4 rounded-2xl border transition-all cursor-pointer @(isSelected ? "bg-indigo-50/50 dark:bg-indigo-950/20 border-indigo-500 shadow-sm" : "bg-white dark:bg-[#121520] border-slate-200/80 dark:border-[#1E2337] hover:border-slate-300 dark:hover:border-[#2E3654]")" 
+                     @onclick="() => SelectDeck(deck.Id)">
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <span class="w-2.5 h-2.5 rounded-full" style="background: @deck.Color;"></span>
+                        <span class="text-[11px] font-mono text-slate-500 dark:text-[#949BAF]">@deck.Cards.Count cards</span>
+                    </div>
+                    <h4 class="text-sm font-bold text-slate-900 dark:text-white truncate">@deck.Title</h4>
+                    <p class="text-[11px] text-slate-500 dark:text-[#949BAF] mt-1 line-clamp-1">@deck.Subject</p>
+
+                    <div class="mt-3">
+                        <div class="flex items-center justify-between text-[10px] text-slate-400 mb-1">
+                            <span>Mastery</span>
+                            <span class="font-bold text-slate-700 dark:text-zinc-300">@masteryPercent%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 dark:bg-[#1A1F30] h-1.5 rounded-full overflow-hidden">
+                            <div class="bg-indigo-500 h-full rounded-full transition-all duration-300" style="width: @masteryPercent%;"></div>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
+
+        @if (CurrentDeck != null && CurrentDeck.Cards.Any())
+        {
+            var currentCard = CurrentDeck.Cards[currentCardIndex];
+
+            <!-- Active Flashcard Study Arena -->
+            <div class="bg-white dark:bg-[#121520] p-6 sm:p-8 rounded-2xl border border-slate-200/80 dark:border-[#1E2337] shadow-sm flex flex-col items-center max-w-2xl mx-auto">
+                <div class="w-full flex items-center justify-between pb-4 border-b border-slate-100 dark:border-[#1E2337] mb-6">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold text-slate-700 dark:text-zinc-200">@CurrentDeck.Title</span>
+                        <span class="text-slate-400">•</span>
+                        <span class="text-xs text-slate-500 font-mono">Card @(currentCardIndex + 1) of @CurrentDeck.Cards.Count</span>
+                    </div>
+
+                    <button class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1" @onclick="() => showAddCardModal = true">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span>Add Card</span>
+                    </button>
+                </div>
+
+                <!-- 3D Interactive Card Frame -->
+                <div class="w-full h-72 sm:h-80 perspective-1000 cursor-pointer select-none" @onclick="ToggleFlip">
+                    <div class="relative w-full h-full transform-style-3d transition-transform duration-500 @(isFlipped ? "rotate-y-180" : "")">
+                        
+                        <!-- Front -->
+                        <div class="absolute inset-0 backface-hidden rounded-2xl p-6 sm:p-8 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-[#151928] dark:to-[#1A1F33] border-2 border-slate-200 dark:border-[#2A314B] flex flex-col justify-between shadow-lg">
+                            <div class="flex items-center justify-between text-xs text-slate-500 dark:text-[#949BAF]">
+                                <span class="font-mono uppercase tracking-wider font-semibold">Question</span>
+                                <span class="text-[11px] px-2 py-0.5 rounded-full bg-slate-200/70 dark:bg-[#121520]">Click to flip</span>
+                            </div>
+
+                            <div class="text-center px-4">
+                                <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-relaxed">
+                                    @currentCard.Question
+                                </h3>
+                            </div>
+
+                            <div class="flex items-center justify-between text-xs text-slate-400">
+                                <span>@CurrentDeck.Subject</span>
+                                <span>@(currentCard.IsMastered ? "⭐ Mastered" : "⏳ In Progress")</span>
+                            </div>
+                        </div>
+
+                        <!-- Back -->
+                        <div class="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl p-6 sm:p-8 bg-gradient-to-br from-indigo-900 to-indigo-950 text-white border-2 border-indigo-500 flex flex-col justify-between shadow-2xl">
+                            <div class="flex items-center justify-between text-xs text-indigo-300">
+                                <span class="font-mono uppercase tracking-wider font-semibold">Answer Explanation</span>
+                                <span class="text-[11px] px-2 py-0.5 rounded-full bg-indigo-950/80">Click to flip</span>
+                            </div>
+
+                            <div class="text-center px-4">
+                                <p class="text-sm sm:text-base font-medium text-slate-100 leading-relaxed">
+                                    @currentCard.Answer
+                                </p>
+                            </div>
+
+                            <div class="flex items-center justify-between text-xs text-indigo-300">
+                                <span>@CurrentDeck.Subject</span>
+                                <span>Review Count: @currentCard.ReviewCount</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Self-Assessment Rating Controls -->
+                <div class="w-full flex items-center justify-between gap-3 mt-6 pt-4 border-t border-slate-100 dark:border-[#1E2337]">
+                    <button class="p-2.5 rounded-xl bg-slate-100 dark:bg-[#181C2B] text-slate-600 dark:text-[#949BAF] hover:text-slate-900 dark:hover:text-white transition-all disabled:opacity-30" 
+                            @onclick="PrevCard" 
+                            disabled="@(currentCardIndex <= 0)">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <button class="px-4 py-2 rounded-xl text-xs font-semibold bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/40 hover:bg-rose-100 transition-all flex items-center gap-1.5"
+                                @onclick="() => RateCard(false)">
+                            <span>Needs Practice</span>
+                        </button>
+                        <button class="px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40 hover:bg-emerald-100 transition-all flex items-center gap-1.5"
+                                @onclick="() => RateCard(true)">
+                            <span>Mastered</span>
+                        </button>
+                    </div>
+
+                    <button class="p-2.5 rounded-xl bg-slate-100 dark:bg-[#181C2B] text-slate-600 dark:text-[#949BAF] hover:text-slate-900 dark:hover:text-white transition-all disabled:opacity-30" 
+                            @onclick="NextCard" 
+                            disabled="@(currentCardIndex >= CurrentDeck.Cards.Count - 1)">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                </div>
+            </div>
+        }
+        else if (CurrentDeck != null)
+        {
+            <div class="bg-white dark:bg-[#121520] p-8 rounded-2xl border border-slate-200/80 dark:border-[#1E2337] text-center max-w-xl mx-auto">
+                <p class="text-xs text-slate-400 mb-3">This deck is currently empty.</p>
+                <button class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-semibold" @onclick="() => showAddCardModal = true">
+                    Add First Card
+                </button>
+            </div>
+        }
     }
 </div>
 
@@ -171,7 +229,7 @@
             <div class="space-y-4 mb-5">
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-[#949BAF] mb-1">Deck Title *</label>
-                    <input type="text" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#161928] border border-slate-200 dark:border-[#1E2337] text-slate-900 dark:text-white focus:outline-none" placeholder="e.g. Computability & Turing Reductions" @bind="newDeckTitle" />
+                    <input type="text" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#161928] border border-slate-200 dark:border-[#1E2337] text-slate-900 dark:text-white focus:outline-none" placeholder="e.g. Automata Quick Formulas" @bind="newDeckTitle" />
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-[#949BAF] mb-1">Course Subject</label>
@@ -186,7 +244,7 @@
 
             <div class="flex justify-end gap-3">
                 <button class="px-4 py-2 text-xs font-medium rounded-xl text-slate-600 hover:bg-slate-100 dark:hover:bg-[#1E2337]" @onclick="() => showNewDeckModal = false">Cancel</button>
-                <button class="px-5 py-2 text-xs font-semibold rounded-xl bg-indigo-600 text-white shadow-md" @onclick="CreateDeck" disabled="@string.IsNullOrWhiteSpace(newDeckTitle)">Create</button>
+                <button class="px-5 py-2 text-xs font-semibold rounded-xl bg-indigo-600 text-white shadow-md" @onclick="CreateDeck" disabled="@string.IsNullOrWhiteSpace(newDeckTitle)">Create Deck</button>
             </div>
         </div>
     </div>
@@ -294,6 +352,10 @@
         await State.AddFlashcardDeckAsync(newDeckTitle, newDeckSubject, "Custom study deck", subjectDef?.Color ?? "#6366F1");
         newDeckTitle = "";
         showNewDeckModal = false;
+        if (State.FlashcardDecks.Any())
+        {
+            activeDeckId = State.FlashcardDecks.Last().Id;
+        }
     }
 
     private async Task AddCard()
