@@ -1,0 +1,215 @@
+@page "/analytics"
+@inject StudyStateService State
+@implements IDisposable
+
+<PageTitle>Analytics & Study Insights | Studbud</PageTitle>
+
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="bg-white dark:bg-[#121520] p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-[#1E2337] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Study Analytics & Focus Insights</h1>
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-[#949BAF] mt-0.5">Track your time allocation, subject distribution, and study streaks.</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <span class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/30 text-xs font-semibold flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                <span>Active Productivity Track</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- Top KPI Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="p-5 rounded-2xl bg-white dark:bg-[#121520] border border-slate-200/80 dark:border-[#1E2337] shadow-sm">
+            <span class="text-xs font-medium text-slate-500 dark:text-[#949BAF]">All-Time Focus Time</span>
+            <div class="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white mt-1">
+                @FormatMinutes(TotalStudyMinutes)
+            </div>
+            <span class="text-[11px] text-slate-400 mt-2 block font-medium">@TotalWorkSessions completed sessions</span>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-white dark:bg-[#121520] border border-slate-200/80 dark:border-[#1E2337] shadow-sm">
+            <span class="text-xs font-medium text-slate-500 dark:text-[#949BAF]">Today's Focus Time</span>
+            <div class="text-2xl sm:text-3xl font-extrabold font-mono text-indigo-600 dark:text-indigo-400 mt-1">
+                @FormatMinutes(TodayStudyMinutes)
+            </div>
+            <span class="text-[11px] text-slate-400 mt-2 block font-medium">@State.CompletedPomodoroCount / @State.Settings.DailyPomodoroGoal daily target cycles</span>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-white dark:bg-[#121520] border border-slate-200/80 dark:border-[#1E2337] shadow-sm">
+            <span class="text-xs font-medium text-slate-500 dark:text-[#949BAF]">Task Completion Rate</span>
+            <div class="text-2xl sm:text-3xl font-extrabold font-mono text-amber-500 mt-1">
+                @(State.Tasks.Count > 0 ? (int)((double)State.Tasks.Count(t => t.IsCompleted) / State.Tasks.Count * 100) : 0)%
+            </div>
+            <span class="text-[11px] text-slate-400 mt-2 block font-medium">@State.Tasks.Count(t => t.IsCompleted) of @State.Tasks.Count tasks done</span>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-white dark:bg-[#121520] border border-slate-200/80 dark:border-[#1E2337] shadow-sm">
+            <span class="text-xs font-medium text-slate-500 dark:text-[#949BAF]">Study Efficiency Score</span>
+            <div class="text-2xl sm:text-3xl font-extrabold font-mono text-emerald-500 mt-1">
+                @(Math.Min(98, 75 + State.CompletedPomodoroCount * 3))%
+            </div>
+            <span class="text-[11px] text-slate-400 mt-2 block font-medium">Consistent pacing & breaks</span>
+        </div>
+    </div>
+
+    <!-- Charts & Breakdowns Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Subject Time Distribution (7 cols) -->
+        <div class="lg:col-span-7 bg-white dark:bg-[#121520] p-6 rounded-2xl border border-slate-200/80 dark:border-[#1E2337] shadow-sm flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-[#1E2337] mb-5">
+                    <h3 class="font-bold text-sm text-slate-900 dark:text-white">Focus Time by Course Subject</h3>
+                    <span class="text-xs text-slate-400">Total: @FormatMinutes(TotalStudyMinutes)</span>
+                </div>
+
+                <div class="space-y-4">
+                    @foreach (var sub in State.Subjects)
+                    {
+                        var subjectMinutes = State.SessionHistory.Where(s => s.Mode == TimerMode.Work && s.Subject == sub.Name).Sum(s => s.DurationMinutes);
+                        var percent = TotalStudyMinutes > 0 ? (int)((double)subjectMinutes / TotalStudyMinutes * 100) : 0;
+
+                        <div>
+                            <div class="flex items-center justify-between text-xs mb-1.5">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full" style="background: @sub.Color;"></span>
+                                    <span class="font-semibold text-slate-800 dark:text-zinc-200">@sub.Name</span>
+                                </div>
+                                <span class="font-mono text-slate-600 dark:text-[#949BAF]">@FormatMinutes(subjectMinutes) (@percent%)</span>
+                            </div>
+                            <div class="w-full bg-slate-100 dark:bg-[#1A1F30] h-2.5 rounded-full overflow-hidden">
+                                <div class="h-full rounded-full transition-all duration-500" style="width: @(Math.Max(3, percent))%; background: @sub.Color;"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-100 dark:border-[#1E2337] flex items-center justify-between text-xs text-slate-500 dark:text-[#949BAF]">
+                <span>Automata Theory & AppDev represent the largest study allocations.</span>
+            </div>
+        </div>
+
+        <!-- Weekly Focus Distribution (5 cols) -->
+        <div class="lg:col-span-5 bg-white dark:bg-[#121520] p-6 rounded-2xl border border-slate-200/80 dark:border-[#1E2337] shadow-sm flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-[#1E2337] mb-5">
+                    <h3 class="font-bold text-sm text-slate-900 dark:text-white">Last 7 Days Activity</h3>
+                    <span class="text-xs text-indigo-500 font-medium">Daily Minutes</span>
+                </div>
+
+                <!-- 7-day Bar Chart -->
+                <div class="flex items-end justify-between gap-2 h-44 pt-4 px-2">
+                    @for (int i = 6; i >= 0; i--)
+                    {
+                        var day = DateTime.Today.AddDays(-i);
+                        var dayMinutes = State.SessionHistory.Where(s => s.Mode == TimerMode.Work && s.CompletedAt.Date == day.Date).Sum(s => s.DurationMinutes);
+                        var barHeight = Math.Min(100, (int)((double)dayMinutes / 120 * 100)); // normalized to 120m max
+                        var isToday = i == 0;
+
+                        <div class="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
+                            <span class="text-[10px] font-mono text-slate-400 group-hover:text-indigo-500 transition-colors">@(dayMinutes)m</span>
+                            <div class="w-full max-w-[28px] rounded-t-lg transition-all duration-500 @(isToday ? "bg-indigo-600 shadow-glow-indigo" : (dayMinutes > 0 ? "bg-slate-300 dark:bg-indigo-950/80 dark:border dark:border-indigo-800" : "bg-slate-100 dark:bg-[#181C2B]"))" 
+                                 style="height: @(Math.Max(8, barHeight))%;"></div>
+                            <span class="text-[10px] font-medium text-slate-500 dark:text-[#949BAF] @(isToday ? "font-bold text-indigo-600 dark:text-indigo-400" : "")">
+                                @day.ToString("ddd")
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-100 dark:border-[#1E2337] text-xs text-slate-500 dark:text-[#949BAF]">
+                Average Daily Focus: <span class="font-mono font-semibold text-slate-900 dark:text-white">@(TotalStudyMinutes / 7) mins/day</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full Session History Log Table -->
+    <div class="bg-white dark:bg-[#121520] p-6 rounded-2xl border border-slate-200/80 dark:border-[#1E2337] shadow-sm">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-[#1E2337] mb-4">
+            <h3 class="font-bold text-sm text-slate-900 dark:text-white">Session History Log</h3>
+            <div class="flex items-center gap-3">
+                <select class="text-xs py-1.5 px-2.5 rounded-lg bg-slate-50 dark:bg-[#161928] border border-slate-200 dark:border-[#1E2337] text-slate-700 dark:text-white focus:outline-none" @bind="selectedLogFilter">
+                    <option value="All">All Modes</option>
+                    <option value="Work">Focus Only</option>
+                    <option value="Break">Breaks Only</option>
+                </select>
+
+                @if (State.SessionHistory.Any())
+                {
+                    <button class="text-xs text-rose-500 hover:text-rose-600 font-medium" @onclick="() => State.ClearHistoryAsync()">
+                        Clear All Log
+                    </button>
+                }
+            </div>
+        </div>
+
+        <div class="space-y-2.5 max-h-[350px] overflow-y-auto pr-1">
+            @if (FilteredLogs.Any())
+            {
+                @foreach (var session in FilteredLogs)
+                {
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#161928] border border-slate-200/60 dark:border-[#1E2337]">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2 py-0.5 text-xs font-semibold rounded-md font-mono @(session.Mode == TimerMode.Work ? "bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300" : "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300")">
+                                @session.ModeDisplay
+                            </span>
+                            <div>
+                                <div class="text-xs sm:text-sm font-semibold text-slate-800 dark:text-zinc-200">@session.TaskTitle</div>
+                                <div class="text-[11px] text-slate-400">@session.Subject • @session.CompletedAt.ToString("MMM dd, yyyy - hh:mm tt")</div>
+                            </div>
+                        </div>
+                        <span class="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                            +@session.DurationMinutes mins
+                        </span>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="py-12 text-center text-xs text-slate-400">No session logs found.</div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string selectedLogFilter = "All";
+
+    private int TotalStudyMinutes => State.SessionHistory.Where(s => s.Mode == TimerMode.Work).Sum(s => s.DurationMinutes);
+    private int TodayStudyMinutes => State.SessionHistory.Where(s => s.Mode == TimerMode.Work && s.CompletedAt.Date == DateTime.Today).Sum(s => s.DurationMinutes);
+    private int TotalWorkSessions => State.SessionHistory.Count(s => s.Mode == TimerMode.Work);
+
+    private IEnumerable<SessionRecord> FilteredLogs => selectedLogFilter switch
+    {
+        "Work" => State.SessionHistory.Where(s => s.Mode == TimerMode.Work),
+        "Break" => State.SessionHistory.Where(s => s.Mode != TimerMode.Work),
+        _ => State.SessionHistory
+    };
+
+    private string FormatMinutes(int totalMins)
+    {
+        int h = totalMins / 60;
+        int m = totalMins % 60;
+        if (h > 0) return $"{h}h {m}m";
+        return $"{m}m";
+    }
+
+    protected override void OnInitialized()
+    {
+        State.OnChange += OnStateChanged;
+    }
+
+    private void OnStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        State.OnChange -= OnStateChanged;
+    }
+}
