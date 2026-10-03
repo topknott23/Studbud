@@ -14,6 +14,7 @@ public class StudyStateService : IDisposable
     public List<TaskItem> Tasks { get; private set; } = new();
     public List<SessionRecord> SessionHistory { get; private set; } = new();
     public List<SubjectDef> Subjects { get; private set; } = SubjectDef.DefaultSubjects;
+    public List<FlashcardDeck> FlashcardDecks { get; private set; } = new();
 
     // Timer State
     public TimerMode CurrentMode { get; private set; } = TimerMode.Work;
@@ -74,7 +75,6 @@ public class StudyStateService : IDisposable
                 if (loadedHistory != null)
                 {
                     SessionHistory = loadedHistory;
-                    // Calculate today's completed pomodoros
                     CompletedPomodoroCount = SessionHistory.Count(s => s.Mode == TimerMode.Work && s.CompletedAt.Date == DateTime.Today);
                 }
             }
@@ -82,12 +82,30 @@ public class StudyStateService : IDisposable
             {
                 SeedDefaultHistory();
             }
+
+            var decksJson = await _js.InvokeAsync<string?>("localStorage.getItem", "study_flashcards");
+            if (!string.IsNullOrEmpty(decksJson))
+            {
+                var loadedDecks = JsonSerializer.Deserialize<List<FlashcardDeck>>(decksJson);
+                if (loadedDecks != null && loadedDecks.Count > 0)
+                {
+                    FlashcardDecks = loadedDecks;
+                }
+                else
+                {
+                    SeedDefaultFlashcards();
+                }
+            }
+            else
+            {
+                SeedDefaultFlashcards();
+            }
         }
         catch
         {
-            // Fallback to in-memory defaults if storage is unavailable
             if (Tasks.Count == 0) SeedDefaultTasks();
             if (SessionHistory.Count == 0) SeedDefaultHistory();
+            if (FlashcardDecks.Count == 0) SeedDefaultFlashcards();
         }
 
         SetMode(TimerMode.Work);
@@ -98,12 +116,78 @@ public class StudyStateService : IDisposable
     {
         Tasks = new List<TaskItem>
         {
-            new TaskItem { Title = "Implement Finite State Machine Diagram", Subject = "Automata Theory", EstimatedPomodoros = 3, CompletedPomodoros = 2, IsCompleted = false },
-            new TaskItem { Title = "Configure Blazor State Management & UI Components", Subject = "Application Development", EstimatedPomodoros = 4, CompletedPomodoros = 3, IsCompleted = false },
-            new TaskItem { Title = "Train Neural Network Classification Model", Subject = "Intelligent Systems", EstimatedPomodoros = 2, CompletedPomodoros = 2, IsCompleted = true, CompletedAt = DateTime.Now.AddHours(-1) },
-            new TaskItem { Title = "Prepare Business Model Canvas & Pitch Deck", Subject = "Technopreneurship", EstimatedPomodoros = 2, CompletedPomodoros = 0, IsCompleted = false },
-            new TaskItem { Title = "Solve Linear Programming Simplex Method", Subject = "Quantitative Methods", EstimatedPomodoros = 3, CompletedPomodoros = 1, IsCompleted = false },
-            new TaskItem { Title = "Design Normalized Relational Schema & Indexes", Subject = "Information Management 2", EstimatedPomodoros = 2, CompletedPomodoros = 0, IsCompleted = false }
+            new TaskItem 
+            { 
+                Title = "Implement Finite State Machine Transition Diagram", 
+                Description = "Draw state transitions for DFA and NFA string recognition exercises", 
+                Subject = "Automata Theory", 
+                Priority = TaskPriority.High, 
+                Status = StudyTaskStatus.InProgress, 
+                EstimatedPomodoros = 3, 
+                CompletedPomodoros = 2, 
+                IsCompleted = false,
+                DueDate = DateTime.Today.AddDays(1)
+            },
+            new TaskItem 
+            { 
+                Title = "Migrate Blazor WebAssembly Dashboard to Tailwind CSS", 
+                Description = "Integrate Tailwind CDN, refactor UI components and create responsive layout", 
+                Subject = "Application Development", 
+                Priority = TaskPriority.High, 
+                Status = StudyTaskStatus.InProgress, 
+                EstimatedPomodoros = 4, 
+                CompletedPomodoros = 3, 
+                IsCompleted = false,
+                DueDate = DateTime.Today
+            },
+            new TaskItem 
+            { 
+                Title = "Train Neural Network Classification Model", 
+                Description = "Run forward and backpropagation tuning with cross-entropy loss", 
+                Subject = "Intelligent Systems", 
+                Priority = TaskPriority.Medium, 
+                Status = StudyTaskStatus.Done, 
+                EstimatedPomodoros = 2, 
+                CompletedPomodoros = 2, 
+                IsCompleted = true, 
+                CompletedAt = DateTime.Now.AddHours(-1) 
+            },
+            new TaskItem 
+            { 
+                Title = "Prepare Business Model Canvas & Value Proposition", 
+                Description = "Refine customer segments, revenue streams, and cost structures", 
+                Subject = "Technopreneurship", 
+                Priority = TaskPriority.Medium, 
+                Status = StudyTaskStatus.Todo, 
+                EstimatedPomodoros = 2, 
+                CompletedPomodoros = 0, 
+                IsCompleted = false,
+                DueDate = DateTime.Today.AddDays(3)
+            },
+            new TaskItem 
+            { 
+                Title = "Solve Linear Programming Simplex Method Problems", 
+                Description = "Formulate dual problem and solve tableau iterations for optimal cost", 
+                Subject = "Quantitative Methods", 
+                Priority = TaskPriority.High, 
+                Status = StudyTaskStatus.Todo, 
+                EstimatedPomodoros = 3, 
+                CompletedPomodoros = 1, 
+                IsCompleted = false,
+                DueDate = DateTime.Today.AddDays(2)
+            },
+            new TaskItem 
+            { 
+                Title = "Design 3NF Relational Schema & B-Tree Indexes", 
+                Description = "Eliminate transitive dependencies and write DDL queries", 
+                Subject = "Information Management 2", 
+                Priority = TaskPriority.Low, 
+                Status = StudyTaskStatus.Todo, 
+                EstimatedPomodoros = 2, 
+                CompletedPomodoros = 0, 
+                IsCompleted = false,
+                DueDate = DateTime.Today.AddDays(4)
+            }
         };
     }
 
@@ -111,12 +195,73 @@ public class StudyStateService : IDisposable
     {
         SessionHistory = new List<SessionRecord>
         {
-            new SessionRecord { Mode = TimerMode.Work, Subject = "Application Development", TaskTitle = "Configure Blazor State Management & UI Components", DurationMinutes = 25, CompletedAt = DateTime.Now.AddHours(-3) },
+            new SessionRecord { Mode = TimerMode.Work, Subject = "Application Development", TaskTitle = "Migrate Blazor WebAssembly Dashboard to Tailwind CSS", DurationMinutes = 25, CompletedAt = DateTime.Now.AddHours(-3) },
             new SessionRecord { Mode = TimerMode.Work, Subject = "Intelligent Systems", TaskTitle = "Train Neural Network Classification Model", DurationMinutes = 25, CompletedAt = DateTime.Now.AddHours(-2) },
-            new SessionRecord { Mode = TimerMode.Work, Subject = "Automata Theory", TaskTitle = "Implement Finite State Machine Diagram", DurationMinutes = 25, CompletedAt = DateTime.Now.AddHours(-1) },
+            new SessionRecord { Mode = TimerMode.Work, Subject = "Automata Theory", TaskTitle = "Implement Finite State Machine Transition Diagram", DurationMinutes = 25, CompletedAt = DateTime.Now.AddHours(-1) },
             new SessionRecord { Mode = TimerMode.ShortBreak, Subject = "Break", TaskTitle = "Hydration & Rest", DurationMinutes = 5, CompletedAt = DateTime.Now.AddMinutes(-35) }
         };
         CompletedPomodoroCount = SessionHistory.Count(s => s.Mode == TimerMode.Work && s.CompletedAt.Date == DateTime.Today);
+    }
+
+    private void SeedDefaultFlashcards()
+    {
+        FlashcardDecks = new List<FlashcardDeck>
+        {
+            new FlashcardDeck
+            {
+                Title = "Automata & Computability",
+                Subject = "Automata Theory",
+                Description = "Essential definitions of DFAs, NFAs, Grammars, and Turing Machines",
+                Color = "#6366F1",
+                Cards = new List<FlashcardItem>
+                {
+                    new FlashcardItem { Question = "What is a Deterministic Finite Automaton (DFA)?", Answer = "A 5-tuple (Q, Σ, δ, q0, F) where for every state and input symbol, there is exactly one transition state.", Subject = "Automata Theory", IsMastered = true },
+                    new FlashcardItem { Question = "What is the Pumping Lemma used for?", Answer = "To prove by contradiction that a given formal language is NOT regular.", Subject = "Automata Theory", IsMastered = false },
+                    new FlashcardItem { Question = "What distinguishes a Pushdown Automaton (PDA) from a Finite Automaton?", Answer = "A PDA has an infinite stack memory, allowing it to recognize context-free languages (e.g. balanced parentheses).", Subject = "Automata Theory", IsMastered = false },
+                    new FlashcardItem { Question = "What is the Church-Turing Thesis?", Answer = "The hypothesis that any function that can be algorithmically computed can be computed by a Turing Machine.", Subject = "Automata Theory", IsMastered = true }
+                }
+            },
+            new FlashcardDeck
+            {
+                Title = "Web Dev & Blazor Architecture",
+                Subject = "Application Development",
+                Description = "Core concepts in Blazor WebAssembly, component lifecycle, and state",
+                Color = "#3B82F6",
+                Cards = new List<FlashcardItem>
+                {
+                    new FlashcardItem { Question = "What is Blazor WebAssembly?", Answer = "A single-page application (SPA) framework that runs C# code directly in the browser via WebAssembly (WASM).", Subject = "Application Development", IsMastered = true },
+                    new FlashcardItem { Question = "What is the purpose of StateHasChanged()?", Answer = "Notifies the component that its state has changed, causing Blazor to re-render the UI.", Subject = "Application Development", IsMastered = true },
+                    new FlashcardItem { Question = "How does two-way data binding work in Blazor?", Answer = "Using the @bind directive, which links an HTML input element's value with a C# property.", Subject = "Application Development", IsMastered = false },
+                    new FlashcardItem { Question = "Why use Tailwind CSS utility-first classes?", Answer = "It allows rapid, expressive UI development directly in markup without writing separate custom CSS selectors.", Subject = "Application Development", IsMastered = true }
+                }
+            },
+            new FlashcardDeck
+            {
+                Title = "Intelligent Systems & ML",
+                Subject = "Intelligent Systems",
+                Description = "Neural networks, backpropagation, and search heuristics",
+                Color = "#10B981",
+                Cards = new List<FlashcardItem>
+                {
+                    new FlashcardItem { Question = "What is Backpropagation?", Answer = "An optimization algorithm that computes the gradient of the loss function with respect to weights using the chain rule.", Subject = "Intelligent Systems", IsMastered = false },
+                    new FlashcardItem { Question = "What is the A* Search Algorithm?", Answer = "A best-first search algorithm that finds the shortest path using f(n) = g(n) + h(n), where g is exact cost and h is heuristic.", Subject = "Intelligent Systems", IsMastered = true },
+                    new FlashcardItem { Question = "What is Overfitting in Machine Learning?", Answer = "When a model learns the training data and noise too closely, leading to poor generalization on unseen test data.", Subject = "Intelligent Systems", IsMastered = false }
+                }
+            },
+            new FlashcardDeck
+            {
+                Title = "Database Systems & IM 2",
+                Subject = "Information Management 2",
+                Description = "Database normalization, B-trees, ACID properties, and query optimization",
+                Color = "#06B6D4",
+                Cards = new List<FlashcardItem>
+                {
+                    new FlashcardItem { Question = "What is Third Normal Form (3NF)?", Answer = "A relation in 2NF where every non-prime attribute is non-transitively dependent on every candidate key.", Subject = "Information Management 2", IsMastered = true },
+                    new FlashcardItem { Question = "What does ACID stand for in DBMS?", Answer = "Atomicity, Consistency, Isolation, and Durability — the 4 key guarantees of transactional database engines.", Subject = "Information Management 2", IsMastered = true },
+                    new FlashcardItem { Question = "Why use B+ Tree indexes for databases?", Answer = "B+ Trees maintain sorted data with balanced O(log n) lookup, insertion, and efficient range queries.", Subject = "Information Management 2", IsMastered = false }
+                }
+            }
+        };
     }
 
     // Timer Controls
@@ -189,7 +334,6 @@ public class StudyStateService : IDisposable
 
     private async Task OnSessionFinished()
     {
-        // Play notification sound
         if (Settings.SoundEnabled)
         {
             try
@@ -199,7 +343,6 @@ public class StudyStateService : IDisposable
             catch { }
         }
 
-        // Record session history
         var activeTask = Tasks.FirstOrDefault(t => t.Id == ActiveTaskId);
         var record = new SessionRecord
         {
@@ -218,9 +361,11 @@ public class StudyStateService : IDisposable
             if (activeTask != null)
             {
                 activeTask.CompletedPomodoros++;
+                activeTask.Status = StudyTaskStatus.InProgress;
                 if (activeTask.CompletedPomodoros >= activeTask.EstimatedPomodoros)
                 {
                     activeTask.IsCompleted = true;
+                    activeTask.Status = StudyTaskStatus.Done;
                     activeTask.CompletedAt = DateTime.Now;
                 }
             }
@@ -261,7 +406,7 @@ public class StudyStateService : IDisposable
     }
 
     // Task Management
-    public async Task AddTaskAsync(string title, string subject, int estimatedPomodoros = 1)
+    public async Task AddTaskAsync(string title, string subject, int estimatedPomodoros = 1, TaskPriority priority = TaskPriority.Medium, string description = "", DateTime? dueDate = null)
     {
         if (string.IsNullOrWhiteSpace(title)) return;
 
@@ -269,9 +414,13 @@ public class StudyStateService : IDisposable
         {
             Title = title.Trim(),
             Subject = subject,
+            Priority = priority,
+            Description = description,
             EstimatedPomodoros = Math.Max(1, estimatedPomodoros),
             CompletedPomodoros = 0,
-            IsCompleted = false
+            Status = StudyTaskStatus.Todo,
+            IsCompleted = false,
+            DueDate = dueDate
         };
 
         Tasks.Insert(0, task);
@@ -284,12 +433,42 @@ public class StudyStateService : IDisposable
         NotifyStateChanged();
     }
 
+    public async Task UpdateTaskAsync(TaskItem updatedTask)
+    {
+        var task = Tasks.FirstOrDefault(t => t.Id == updatedTask.Id);
+        if (task != null)
+        {
+            task.Title = updatedTask.Title;
+            task.Description = updatedTask.Description;
+            task.Subject = updatedTask.Subject;
+            task.Priority = updatedTask.Priority;
+            task.EstimatedPomodoros = updatedTask.EstimatedPomodoros;
+            task.DueDate = updatedTask.DueDate;
+            await SaveDataAsync();
+            NotifyStateChanged();
+        }
+    }
+
+    public async Task MoveTaskStatusAsync(string taskId, StudyTaskStatus newStatus)
+    {
+        var task = Tasks.FirstOrDefault(t => t.Id == taskId);
+        if (task != null)
+        {
+            task.Status = newStatus;
+            task.IsCompleted = newStatus == StudyTaskStatus.Done;
+            task.CompletedAt = task.IsCompleted ? DateTime.Now : null;
+            await SaveDataAsync();
+            NotifyStateChanged();
+        }
+    }
+
     public async Task ToggleTaskCompletionAsync(string taskId)
     {
         var task = Tasks.FirstOrDefault(t => t.Id == taskId);
         if (task != null)
         {
             task.IsCompleted = !task.IsCompleted;
+            task.Status = task.IsCompleted ? StudyTaskStatus.Done : StudyTaskStatus.Todo;
             task.CompletedAt = task.IsCompleted ? DateTime.Now : null;
             await SaveDataAsync();
             NotifyStateChanged();
@@ -311,10 +490,53 @@ public class StudyStateService : IDisposable
         }
     }
 
+    // Flashcards Management
+    public async Task ToggleFlashcardMasteryAsync(string deckId, string cardId)
+    {
+        var deck = FlashcardDecks.FirstOrDefault(d => d.Id == deckId);
+        var card = deck?.Cards.FirstOrDefault(c => c.Id == cardId);
+        if (card != null)
+        {
+            card.IsMastered = !card.IsMastered;
+            card.ReviewCount++;
+            await SaveDataAsync();
+            NotifyStateChanged();
+        }
+    }
+
+    public async Task AddFlashcardDeckAsync(string title, string subject, string description, string color)
+    {
+        var deck = new FlashcardDeck
+        {
+            Title = title,
+            Subject = subject,
+            Description = description,
+            Color = color
+        };
+        FlashcardDecks.Add(deck);
+        await SaveDataAsync();
+        NotifyStateChanged();
+    }
+
+    public async Task AddFlashcardToDeckAsync(string deckId, string question, string answer)
+    {
+        var deck = FlashcardDecks.FirstOrDefault(d => d.Id == deckId);
+        if (deck != null)
+        {
+            deck.Cards.Add(new FlashcardItem
+            {
+                Question = question,
+                Answer = answer,
+                Subject = deck.Subject
+            });
+            await SaveDataAsync();
+            NotifyStateChanged();
+        }
+    }
+
     public async Task UpdateSettingsAsync(UserSettings newSettings)
     {
         Settings = newSettings;
-        // Adjust current timer duration if not running
         if (!IsRunning)
         {
             SetMode(CurrentMode);
@@ -331,6 +553,19 @@ public class StudyStateService : IDisposable
         NotifyStateChanged();
     }
 
+    public async Task ResetAllDataAsync()
+    {
+        Tasks.Clear();
+        SessionHistory.Clear();
+        FlashcardDecks.Clear();
+        SeedDefaultTasks();
+        SeedDefaultHistory();
+        SeedDefaultFlashcards();
+        CompletedPomodoroCount = SessionHistory.Count(s => s.Mode == TimerMode.Work && s.CompletedAt.Date == DateTime.Today);
+        await SaveDataAsync();
+        NotifyStateChanged();
+    }
+
     private async Task SaveDataAsync()
     {
         try
@@ -338,6 +573,7 @@ public class StudyStateService : IDisposable
             await _js.InvokeVoidAsync("localStorage.setItem", "study_tasks", JsonSerializer.Serialize(Tasks));
             await _js.InvokeVoidAsync("localStorage.setItem", "study_history", JsonSerializer.Serialize(SessionHistory));
             await _js.InvokeVoidAsync("localStorage.setItem", "study_settings", JsonSerializer.Serialize(Settings));
+            await _js.InvokeVoidAsync("localStorage.setItem", "study_flashcards", JsonSerializer.Serialize(FlashcardDecks));
         }
         catch { }
     }

@@ -1,0 +1,437 @@
+@page "/planner"
+@inject StudyStateService State
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>Study Planner & Kanban | Studbud</PageTitle>
+
+<div class="space-y-6">
+    <!-- Top Action Bar -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#121520] p-5 rounded-2xl border border-slate-200/80 dark:border-[#1E2337] shadow-sm">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Study Planner & Tasks</h1>
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-[#949BAF] mt-0.5">Organize assignments, break down deliverables, and track Pomodoro cycles.</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <!-- View Mode Switcher -->
+            <div class="flex items-center p-1 bg-slate-100 dark:bg-[#181C2B] rounded-xl border border-slate-200/60 dark:border-[#1E2337]">
+                <button class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all @(viewMode == "kanban" ? "bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-sm" : "text-slate-600 dark:text-[#949BAF]")" 
+                        @onclick='() => viewMode = "kanban"'>
+                    Kanban Board
+                </button>
+                <button class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all @(viewMode == "list" ? "bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-sm" : "text-slate-600 dark:text-[#949BAF]")" 
+                        @onclick='() => viewMode = "list"'>
+                    List View
+                </button>
+            </div>
+
+            <!-- New Task Button -->
+            <button class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-md shadow-indigo-600/20 transition-all flex items-center gap-2" 
+                    @onclick="() => showCreateModal = true">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>New Task</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Search & Filter Controls -->
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-[#121520] p-4 rounded-2xl border border-slate-200/80 dark:border-[#1E2337]">
+        <!-- Search Input -->
+        <div class="relative flex-1">
+            <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#949BAF]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" 
+                   class="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#161928] border border-slate-200 dark:border-[#1E2337] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500" 
+                   placeholder="Search tasks by title or course..." 
+                   @bind="searchQuery" 
+                   @bind:event="oninput" />
+        </div>
+
+        <!-- Subject Filter Dropdown -->
+        <div class="flex items-center gap-2">
+            <select class="text-xs py-2 px-3 rounded-xl bg-slate-50 dark:bg-[#161928] border border-slate-200 dark:border-[#1E2337] text-slate-700 dark:text-[#EDEDED] focus:outline-none focus:ring-1 focus:ring-indigo-500" 
+                    @bind="selectedSubjectFilter">
+                <option value="All">All Courses</option>
+                @foreach (var sub in State.Subjects)
+                {
+                    <option value="@sub.Name">@sub.Name</option>
+                }
+            </select>
+
+            <select class="text-xs py-2 px-3 rounded-xl bg-slate-50 dark:bg-[#161928] border border-slate-200 dark:border-[#1E2337] text-slate-700 dark:text-[#EDEDED] focus:outline-none focus:ring-1 focus:ring-indigo-500" 
+                    @bind="selectedPriorityFilter">
+                <option value="All">All Priorities</option>
+                <option value="High">High Priority</option>
+                <option value="Medium">Medium Priority</option>
+                <option value="Low">Low Priority</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- View Mode: Kanban -->
+    @if (viewMode == "kanban")
+    {
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Column 1: To Do -->
+            <div class="flex flex-col bg-slate-100/70 dark:bg-[#121520]/80 rounded-2xl border border-slate-200/80 dark:border-[#1E2337] p-4 min-h-[500px]">
+                <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-200 dark:border-[#1E2337]">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-zinc-200">To Do</h3>
+                    </div>
+                    <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-[#1E2337] text-slate-700 dark:text-zinc-300">
+                        @TodoTasks.Count()
+                    </span>
+                </div>
+
+                <div class="space-y-3 flex-1 overflow-y-auto">
+                    @foreach (var task in TodoTasks)
+                    {
+                        @RenderTaskCard(task)
+                    }
+                    @if (!TodoTasks.Any())
+                    {
+                        <div class="py-12 text-center text-xs text-slate-400 dark:text-[#949BAF] border border-dashed border-slate-300 dark:border-[#1E2337] rounded-xl">
+                            No tasks in To Do
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Column 2: In Progress -->
+            <div class="flex flex-col bg-slate-100/70 dark:bg-[#121520]/80 rounded-2xl border border-slate-200/80 dark:border-[#1E2337] p-4 min-h-[500px]">
+                <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-200 dark:border-[#1E2337]">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-zinc-200">In Progress</h3>
+                    </div>
+                    <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">
+                        @InProgressTasks.Count()
+                    </span>
+                </div>
+
+                <div class="space-y-3 flex-1 overflow-y-auto">
+                    @foreach (var task in InProgressTasks)
+                    {
+                        @RenderTaskCard(task)
+                    }
+                    @if (!InProgressTasks.Any())
+                    {
+                        <div class="py-12 text-center text-xs text-slate-400 dark:text-[#949BAF] border border-dashed border-slate-300 dark:border-[#1E2337] rounded-xl">
+                            No tasks in Progress
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Column 3: Completed -->
+            <div class="flex flex-col bg-slate-100/70 dark:bg-[#121520]/80 rounded-2xl border border-slate-200/80 dark:border-[#1E2337] p-4 min-h-[500px]">
+                <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-200 dark:border-[#1E2337]">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-zinc-200">Completed</h3>
+                    </div>
+                    <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
+                        @DoneTasks.Count()
+                    </span>
+                </div>
+
+                <div class="space-y-3 flex-1 overflow-y-auto">
+                    @foreach (var task in DoneTasks)
+                    {
+                        @RenderTaskCard(task)
+                    }
+                    @if (!DoneTasks.Any())
+                    {
+                        <div class="py-12 text-center text-xs text-slate-400 dark:text-[#949BAF] border border-dashed border-slate-300 dark:border-[#1E2337] rounded-xl">
+                            No completed tasks yet
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- View Mode: List View -->
+        <div class="bg-white dark:bg-[#121520] rounded-2xl border border-slate-200/80 dark:border-[#1E2337] p-5 shadow-sm space-y-3">
+            @if (FilteredTaskList.Any())
+            {
+                @foreach (var task in FilteredTaskList)
+                {
+                    @RenderTaskCard(task)
+                }
+            }
+            else
+            {
+                <div class="py-16 text-center text-xs text-slate-400 dark:text-[#949BAF]">
+                    No tasks match the filter criteria.
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Task Card Render Fragment -->
+@code {
+    private RenderFragment RenderTaskCard(TaskItem task) => __builder =>
+    {
+        var subjectDef = State.Subjects.FirstOrDefault(s => s.Name == task.Subject);
+        var isFocused = State.ActiveTaskId == task.Id;
+
+        <div class="group p-4 rounded-xl bg-white dark:bg-[#151928] border border-slate-200/80 dark:border-[#1E2337] shadow-sm hover:border-indigo-400 dark:hover:border-indigo-500/50 transition-all flex flex-col justify-between gap-3">
+            <!-- Header with course tag & priority -->
+            <div class="flex items-center justify-between gap-2">
+                <span class="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1E2337] text-[11px] font-medium text-slate-700 dark:text-zinc-300">
+                    <span class="w-2 h-2 rounded-full" style="background: @(subjectDef?.Color ?? "#6366F1");"></span>
+                    @task.Subject
+                </span>
+
+                <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded tracking-wider @GetPriorityBadgeClass(task.Priority)">
+                    @task.Priority
+                </span>
+            </div>
+
+            <!-- Title & Description -->
+            <div>
+                <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-snug @(task.IsCompleted ? "line-through text-slate-400 dark:text-zinc-500" : "")">
+                    @task.Title
+                </h4>
+                @if (!string.IsNullOrEmpty(task.Description))
+                {
+                    <p class="text-xs text-slate-500 dark:text-[#949BAF] mt-1 line-clamp-2">
+                        @task.Description
+                    </p>
+                }
+            </div>
+
+            <!-- Progress and Due Date -->
+            <div class="flex items-center justify-between text-xs text-slate-500 dark:text-[#949BAF] pt-2 border-t border-slate-100 dark:border-[#1E2337]/60">
+                <div class="flex items-center gap-1.5 font-mono text-[11px]">
+                    <svg class="w-3.5 h-3.5 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    <span>@task.CompletedPomodoros/@task.EstimatedPomodoros cycles</span>
+                </div>
+
+                @if (task.DueDate.HasValue)
+                {
+                    <span class="text-[11px] font-medium text-slate-400 dark:text-zinc-400">
+                        Due: @task.DueDate.Value.ToString("MMM dd")
+                    </span>
+                }
+            </div>
+
+            <!-- Card Actions Row -->
+            <div class="flex items-center justify-between pt-1">
+                <!-- Move Status Dropdown / Controls -->
+                <div class="flex items-center gap-1">
+                    @if (task.Status != StudyTaskStatus.Todo)
+                    {
+                        <button class="p-1 rounded text-slate-400 hover:text-slate-700 dark:hover:text-white" 
+                                title="Move to To Do" 
+                                @onclick="() => State.MoveTaskStatusAsync(task.Id, StudyTaskStatus.Todo)">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        </button>
+                    }
+
+                    @if (task.Status != StudyTaskStatus.InProgress)
+                    {
+                        <button class="px-2 py-0.5 text-[11px] rounded bg-slate-100 dark:bg-[#1E2337] text-slate-600 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400" 
+                                @onclick="() => State.MoveTaskStatusAsync(task.Id, StudyTaskStatus.InProgress)">
+                            In Progress
+                        </button>
+                    }
+
+                    @if (task.Status != StudyTaskStatus.Done)
+                    {
+                        <button class="p-1 rounded text-slate-400 hover:text-emerald-500" 
+                                title="Mark Done" 
+                                @onclick="() => State.MoveTaskStatusAsync(task.Id, StudyTaskStatus.Done)">
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </button>
+                    }
+                </div>
+
+                <!-- Focus & Delete Actions -->
+                <div class="flex items-center gap-1.5">
+                    @if (!task.IsCompleted)
+                    {
+                        <button class="px-2.5 py-1 text-xs font-semibold rounded-lg transition-all @(isFocused ? "bg-indigo-600 text-white" : "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/40 hover:bg-indigo-600 hover:text-white")" 
+                                @onclick="() => SetActiveFocusAndNavigate(task.Id)" 
+                                title="Focus this task in Pomodoro timer">
+                            @(isFocused ? "Focusing" : "Focus Now")
+                        </button>
+                    }
+
+                    <button class="p-1 text-slate-400 hover:text-rose-500 transition-colors" 
+                            @onclick="() => State.DeleteTaskAsync(task.Id)" 
+                            title="Delete Task">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>;
+    };
+}
+
+<!-- Create Task Modal -->
+@if (showCreateModal)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" @onclick="() => showCreateModal = false">
+        <div class="w-full max-w-lg bg-white dark:bg-[#121520] border border-slate-200 dark:border-[#1E2337] rounded-2xl shadow-2xl p-6" @onclick:stopPropagation="true">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-[#1E2337] mb-5">
+                <h3 class="font-bold text-base text-slate-900 dark:text-white">Create New Study Task</h3>
+                <button class="p-1.5 rounded-lg text-slate-400 hover:text-white" @onclick="() => showCreateModal = false">✕</button>
+            </div>
+
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-[#949BAF] mb-1">Task Title *</label>
+                    <input type="text" class="w-full px-3 py-2 text-sm rounded-xl bg-slate-50 dark:bg-[#161928] border border-slate-200 dark:border-[#1E2337] text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. Implement Simplex Tableau in Python" @bind="newTitle" />
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-[#949BAF] mb-1">Description / Notes</label>
+                    <textarea rows="2" class="w-full px-3 py-2 text-sm rounded-xl bg-slate-50 dark:bg-[#161928] border border-slate-200 dark:border-[#1E2337] text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Details, requirements, or reference links..." @bind="newDescription"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-[#949BAF] mb-1">Course Subject</label>
+                        <select class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#161928] border border-slate-200 dark:border-[#1E2337] text-slate-900 dark:text-white focus:outline-none" @bind="newSubject">
+                            @foreach (var sub in State.Subjects)
+                            {
+                                <option value="@sub.Name">@sub.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-[#949BAF] mb-1">Priority</label>
+                        <select class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#161928] border border-slate-200 dark:border-[#1E2337] text-slate-900 dark:text-white focus:outline-none" @bind="newPriority">
+                            <option value="@TaskPriority.High">High Priority</option>
+                            <option value="@TaskPriority.Medium">Medium Priority</option>
+                            <option value="@TaskPriority.Low">Low Priority</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-[#949BAF] mb-1">Estimated Cycles</label>
+                        <input type="number" min="1" max="12" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#161928] border border-slate-200 dark:border-[#1E2337] text-slate-900 dark:text-white focus:outline-none" @bind="newEstimatedPomodoros" />
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-[#949BAF] mb-1">Due Date</label>
+                        <input type="date" class="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#161928] border border-slate-200 dark:border-[#1E2337] text-slate-900 dark:text-white focus:outline-none" @bind="newDueDate" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3">
+                <button class="px-4 py-2 text-xs font-medium rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1E2337]" @onclick="() => showCreateModal = false">
+                    Cancel
+                </button>
+                <button class="px-5 py-2 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-md transition-all disabled:opacity-40" 
+                        @onclick="CreateTask" 
+                        disabled="@string.IsNullOrWhiteSpace(newTitle)">
+                    Create Task
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string viewMode = "kanban";
+    private string searchQuery = "";
+    private string selectedSubjectFilter = "All";
+    private string selectedPriorityFilter = "All";
+    private bool showCreateModal = false;
+
+    // Form inputs
+    private string newTitle = "";
+    private string newDescription = "";
+    private string newSubject = "Application Development";
+    private TaskPriority newPriority = TaskPriority.Medium;
+    private int newEstimatedPomodoros = 2;
+    private DateTime? newDueDate = DateTime.Today.AddDays(2);
+
+    private IEnumerable<TaskItem> FilteredTaskList
+    {
+        get
+        {
+            var list = State.Tasks.AsEnumerable();
+            if (!string.IsNullOrWhiteSpace(searchQuery))
+            {
+                list = list.Where(t => t.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) || t.Subject.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
+            }
+            if (selectedSubjectFilter != "All")
+            {
+                list = list.Where(t => t.Subject == selectedSubjectFilter);
+            }
+            if (selectedPriorityFilter != "All")
+            {
+                if (Enum.TryParse<TaskPriority>(selectedPriorityFilter, out var priority))
+                {
+                    list = list.Where(t => t.Priority == priority);
+                }
+            }
+            return list;
+        }
+    }
+
+    private IEnumerable<TaskItem> TodoTasks => FilteredTaskList.Where(t => t.Status == StudyTaskStatus.Todo && !t.IsCompleted);
+    private IEnumerable<TaskItem> InProgressTasks => FilteredTaskList.Where(t => t.Status == StudyTaskStatus.InProgress && !t.IsCompleted);
+    private IEnumerable<TaskItem> DoneTasks => FilteredTaskList.Where(t => t.Status == StudyTaskStatus.Done || t.IsCompleted);
+
+    private string GetPriorityBadgeClass(TaskPriority priority) => priority switch
+    {
+        TaskPriority.High => "bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40",
+        TaskPriority.Medium => "bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40",
+        TaskPriority.Low => "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300",
+        _ => "bg-slate-100 text-slate-600"
+    };
+
+    private async Task CreateTask()
+    {
+        if (string.IsNullOrWhiteSpace(newTitle)) return;
+        await State.AddTaskAsync(newTitle, newSubject, newEstimatedPomodoros, newPriority, newDescription, newDueDate);
+        newTitle = "";
+        newDescription = "";
+        showCreateModal = false;
+    }
+
+    private void SetActiveFocusAndNavigate(string taskId)
+    {
+        State.ActiveTaskId = taskId;
+        Nav.NavigateTo("/");
+    }
+
+    protected override void OnInitialized()
+    {
+        State.OnChange += OnStateChanged;
+    }
+
+    private void OnStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        State.OnChange -= OnStateChanged;
+    }
+}
