@@ -24,6 +24,11 @@ public class StudyStateService : IDisposable
     public int CompletedPomodoroCount { get; private set; } = 0;
     public string? ActiveTaskId { get; set; }
 
+    // Alarm State
+    public bool IsAlarmRinging { get; private set; } = false;
+    public TimerMode AlarmTriggeredMode { get; private set; } = TimerMode.Work;
+    public string AlarmSoundPath { get; set; } = "alarm/Chinese Meme Ringtone Download.mp3";
+
     public event Action? OnChange;
 
     public StudyStateService(IJSRuntime js)
@@ -90,6 +95,10 @@ public class StudyStateService : IDisposable
     // Timer Controls
     public void StartTimer()
     {
+        if (IsAlarmRinging)
+        {
+            _ = StopAlarmOnlyAsync();
+        }
         if (IsRunning) return;
         IsRunning = true;
         _timer?.Start();
@@ -99,6 +108,10 @@ public class StudyStateService : IDisposable
 
     public void PauseTimer()
     {
+        if (IsAlarmRinging)
+        {
+            _ = StopAlarmOnlyAsync();
+        }
         if (!IsRunning) return;
         IsRunning = false;
         _timer?.Stop();
@@ -108,6 +121,10 @@ public class StudyStateService : IDisposable
 
     public void ResetTimer()
     {
+        if (IsAlarmRinging)
+        {
+            _ = StopAlarmOnlyAsync();
+        }
         _timer?.Stop();
         IsRunning = false;
         RemainingSeconds = TotalModeSeconds;
@@ -117,6 +134,10 @@ public class StudyStateService : IDisposable
 
     public void SetMode(TimerMode mode)
     {
+        if (IsAlarmRinging)
+        {
+            _ = StopAlarmOnlyAsync();
+        }
         _timer?.Stop();
         IsRunning = false;
         CurrentMode = mode;
@@ -134,9 +155,46 @@ public class StudyStateService : IDisposable
 
     public void SkipTimer()
     {
+        if (IsAlarmRinging)
+        {
+            _ = StopAlarmOnlyAsync();
+        }
         _timer?.Stop();
         IsRunning = false;
         AdvanceCycle(false);
+    }
+
+    public async Task StopAlarmOnlyAsync()
+    {
+        if (IsAlarmRinging)
+        {
+            IsAlarmRinging = false;
+            try
+            {
+                await _js.InvokeVoidAsync("studyApp.stopAlarm");
+            }
+            catch { }
+            NotifyStateChanged();
+            UpdateDocumentTitle();
+        }
+    }
+
+    public async Task StopAlarmAsync()
+    {
+        await StopAlarmOnlyAsync();
+        AdvanceCycle(true);
+    }
+
+    public async Task ExtendTimerAsync(int additionalMinutes = 5)
+    {
+        await StopAlarmOnlyAsync();
+        CurrentMode = AlarmTriggeredMode;
+        RemainingSeconds = Math.Max(1, additionalMinutes) * 60;
+        TotalModeSeconds = RemainingSeconds;
+        IsRunning = true;
+        _timer?.Start();
+        NotifyStateChanged();
+        UpdateDocumentTitle();
     }
 
     private async void OnTimerTick(object? sender, System.Timers.ElapsedEventArgs e)
@@ -157,11 +215,14 @@ public class StudyStateService : IDisposable
 
     private async Task OnSessionFinished()
     {
+        IsAlarmRinging = true;
+        AlarmTriggeredMode = CurrentMode;
+
         if (Settings.SoundEnabled)
         {
             try
             {
-                await _js.InvokeVoidAsync("studyApp.playChime");
+                await _js.InvokeVoidAsync("studyApp.startAlarm", AlarmSoundPath);
             }
             catch { }
         }
@@ -172,7 +233,7 @@ public class StudyStateService : IDisposable
             Mode = CurrentMode,
             Subject = activeTask?.Subject ?? (CurrentMode == TimerMode.Work ? "General Study" : "Break"),
             TaskTitle = activeTask?.Title ?? (CurrentMode == TimerMode.Work ? "Focus Session" : "Rest & Recharge"),
-            DurationMinutes = TotalModeSeconds / 60,
+            DurationMinutes = Math.Max(1, TotalModeSeconds / 60),
             CompletedAt = DateTime.Now
         };
 
@@ -195,7 +256,8 @@ public class StudyStateService : IDisposable
         }
 
         await SaveDataAsync();
-        AdvanceCycle(true);
+        NotifyStateChanged();
+        UpdateDocumentTitle();
     }
 
     private void AdvanceCycle(bool autoTransition)
@@ -410,6 +472,13 @@ public class StudyStateService : IDisposable
     {
         try
         {
+            if (IsAlarmRinging)
+            {
+                string label = AlarmTriggeredMode == TimerMode.Work ? "Focus Completed!" : "Break Over!";
+                _ = _js.InvokeVoidAsync("studyApp.setTitle", $"⏰ {label} (Alarm Ringing...) | Studbud");
+                return;
+            }
+
             int mins = RemainingSeconds / 60;
             int secs = RemainingSeconds % 60;
             string timeStr = $"{mins:D2}:{secs:D2}";
@@ -426,5 +495,10 @@ public class StudyStateService : IDisposable
     {
         _timer?.Stop();
         _timer?.Dispose();
+        try
+        {
+            _ = _js.InvokeVoidAsync("studyApp.stopAlarm");
+        }
+        catch { }
     }
 }

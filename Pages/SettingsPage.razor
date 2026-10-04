@@ -65,12 +65,12 @@
         <div class="space-y-4">
             <div class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-[#161928] border border-slate-200/60 dark:border-[#1E2337]">
                 <div>
-                    <div class="text-xs font-bold text-slate-800 dark:text-white">Harmonic Audio Chime</div>
-                    <div class="text-[11px] text-slate-400">Play pleasant synthesized chime when a focus session or break ends</div>
+                    <div class="text-xs font-bold text-slate-800 dark:text-white">Continuous Alarm & Ringtone</div>
+                    <div class="text-[11px] text-slate-400">Rings alarm audio repeatedly when timer runs out until stopped or extended by 5 mins</div>
                 </div>
-                <div class="flex items-center gap-3">
-                    <button class="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-slate-200 dark:bg-[#1E2337] text-slate-700 dark:text-zinc-200 hover:bg-slate-300" @onclick="TestSound">
-                        Test Sound
+                <div class="flex items-center gap-2">
+                    <button class="px-2.5 py-1 text-[11px] font-semibold rounded-lg @(isPreviewPlaying ? "bg-rose-500 text-white hover:bg-rose-600" : "bg-slate-200 dark:bg-[#1E2337] text-slate-700 dark:text-zinc-200 hover:bg-slate-300") transition-colors" @onclick="ToggleTestAlarm">
+                        @(isPreviewPlaying ? "Stop Test" : "Test Alarm")
                     </button>
                     <input type="checkbox" class="w-4 h-4 text-indigo-600 accent-indigo-600 cursor-pointer" @bind="soundEnabled" />
                 </div>
@@ -141,17 +141,34 @@
         longBreakDuration = lBreak;
     }
 
-    private async Task TestSound()
+    private bool isPreviewPlaying = false;
+
+    private async Task ToggleTestAlarm()
     {
         try
         {
-            await JS.InvokeVoidAsync("studyApp.playChime");
+            if (isPreviewPlaying)
+            {
+                await JS.InvokeVoidAsync("studyApp.stopAlarm");
+                isPreviewPlaying = false;
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("studyApp.startAlarm", State.AlarmSoundPath);
+                isPreviewPlaying = true;
+            }
         }
         catch { }
     }
 
     private async Task SaveSettings()
     {
+        if (isPreviewPlaying)
+        {
+            await JS.InvokeVoidAsync("studyApp.stopAlarm");
+            isPreviewPlaying = false;
+        }
+
         var settings = new UserSettings
         {
             WorkDurationMinutes = Math.Clamp(workDuration, 1, 120),
@@ -182,5 +199,9 @@
     public void Dispose()
     {
         State.OnChange -= OnStateChanged;
+        if (isPreviewPlaying)
+        {
+            try { _ = JS.InvokeVoidAsync("studyApp.stopAlarm"); } catch { }
+        }
     }
 }

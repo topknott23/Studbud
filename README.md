@@ -7,6 +7,7 @@ A study planner and Pomodoro focus application built with Blazor WebAssembly (.N
 - Automata Theory
 - Application Development
 - Intelligent Systems
+- Applied AI
 - Technopreneurship
 - Quantitative Methods
 - Information Management 2

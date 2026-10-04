@@ -12,4 +12,12 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.11" PrivateAssets="all" />
   </ItemGroup>
 
+  <!-- Auto-sync root alarm folder into wwwroot/alarm on build -->
+  <Target Name="CopyAlarmFolder" BeforeTargets="Build">
+    <ItemGroup>
+      <AlarmFiles Include="alarm\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AlarmFiles)" DestinationFolder="wwwroot\alarm\%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>

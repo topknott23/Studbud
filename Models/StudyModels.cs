@@ -33,6 +33,7 @@ public class SubjectDef
         new SubjectDef { Name = "Automata Theory", Color = "#6366F1", Description = "DFAs, NFAs, Turing machines, and formal grammars" },
         new SubjectDef { Name = "Application Development", Color = "#3B82F6", Description = "Blazor WebAssembly, UI/UX, and software architecture" },
         new SubjectDef { Name = "Intelligent Systems", Color = "#10B981", Description = "Neural networks, classification, heuristics & search" },
+        new SubjectDef { Name = "Applied AI", Color = "#EC4899", Description = "Deep learning, LLMs, computer vision & applied neural systems" },
         new SubjectDef { Name = "Technopreneurship", Color = "#F59E0B", Description = "Business models, startup feasibility, and product design" },
         new SubjectDef { Name = "Quantitative Methods", Color = "#8B5CF6", Description = "Linear programming, simplex method, and optimization" },
         new SubjectDef { Name = "Information Management 2", Color = "#06B6D4", Description = "Database normalization, relational schemas & indexing" }

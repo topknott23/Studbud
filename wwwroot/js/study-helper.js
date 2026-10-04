@@ -1,12 +1,108 @@
 window.studyApp = {
-    // Play pleasant synthesized chime using Web Audio API (no external mp3 file needed)
+    _alarmAudio: null,
+    _synthAlarmInterval: null,
+
+    // Start repeating/looping alarm audio
+    startAlarm: function (soundPath) {
+        this.stopAlarm();
+        const path = soundPath || 'alarm/Chinese Meme Ringtone Download.mp3';
+        
+        try {
+            // Encode the path to properly handle spaces and special characters
+            const encodedPath = encodeURI(path);
+            const audio = new Audio(encodedPath);
+            audio.loop = true;
+            audio.volume = 1.0;
+            this._alarmAudio = audio;
+
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.catch((error) => {
+                    console.warn('HTML5 Audio playback prevented/failed, falling back to Web Audio alarm:', error);
+                    this.startSynthAlarm();
+                });
+            }
+        } catch (err) {
+            console.warn('Audio initialization error, using synth alarm fallback:', err);
+            this.startSynthAlarm();
+        }
+
+        // Haptic feedback vibration on mobile devices
+        if (navigator.vibrate) {
+            try {
+                navigator.vibrate([400, 200, 400, 200, 600]);
+            } catch (e) { }
+        }
+    },
+
+    // Stop and reset the alarm sound
+    stopAlarm: function () {
+        if (this._alarmAudio) {
+            try {
+                this._alarmAudio.pause();
+                this._alarmAudio.currentTime = 0;
+            } catch (e) { }
+            this._alarmAudio = null;
+        }
+        this.stopSynthAlarm();
+    },
+
+    // Check if alarm is currently ringing
+    isAlarmPlaying: function () {
+        return (this._alarmAudio !== null && !this._alarmAudio.paused) || (this._synthAlarmInterval !== null);
+    },
+
+    // Web Audio repeating alarm fallback
+    startSynthAlarm: function () {
+        this.stopSynthAlarm();
+        this.playSynthBeepPattern();
+        this._synthAlarmInterval = setInterval(() => {
+            this.playSynthBeepPattern();
+        }, 1200);
+    },
+
+    stopSynthAlarm: function () {
+        if (this._synthAlarmInterval) {
+            clearInterval(this._synthAlarmInterval);
+            this._synthAlarmInterval = null;
+        }
+    },
+
+    playSynthBeepPattern: function () {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            const now = ctx.currentTime;
+            
+            // Triple upbeat beep sequence
+            const beeps = [880, 880, 1174.66]; // A5, A5, D6
+            beeps.forEach((freq, idx) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now + (idx * 0.14));
+
+                gain.gain.setValueAtTime(0, now + (idx * 0.14));
+                gain.gain.linearRampToValueAtTime(0.25, now + (idx * 0.14) + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + (idx * 0.14) + 0.12);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start(now + (idx * 0.14));
+                osc.stop(now + (idx * 0.14) + 0.12);
+            });
+        } catch (e) { }
+    },
+
+    // Play pleasant synthesized chime for soft notification
     playChime: function () {
         try {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             if (!AudioContext) return;
             const ctx = new AudioContext();
 
-            // Two-tone cheerful chime
             const playNote = (freq, startTime, duration) => {
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
