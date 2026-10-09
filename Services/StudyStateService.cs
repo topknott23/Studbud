@@ -13,7 +13,9 @@ public class StudyStateService : IDisposable
     public UserSettings Settings { get; private set; } = new();
     public List<TaskItem> Tasks { get; private set; } = new();
     public List<SessionRecord> SessionHistory { get; private set; } = new();
-    public List<SubjectDef> Subjects { get; private set; } = SubjectDef.DefaultSubjects;
+    public List<SubjectDef> Subjects { get; private set; } = new(SubjectDef.DefaultSubjects);
+    public List<SubjectNoteItem> SubjectNotes { get; private set; } = new(SubjectNoteItem.DefaultNotes);
+    public List<SubjectResourceItem> SubjectResources { get; private set; } = new();
     public List<FlashcardDeck> FlashcardDecks { get; private set; } = new();
 
     // Timer State
@@ -62,6 +64,36 @@ public class StudyStateService : IDisposable
                 if (loadedTasks != null)
                 {
                     Tasks = loadedTasks;
+                }
+            }
+
+            var subjectsJson = await _js.InvokeAsync<string?>("localStorage.getItem", "study_subjects");
+            if (!string.IsNullOrEmpty(subjectsJson))
+            {
+                var loadedSubjects = JsonSerializer.Deserialize<List<SubjectDef>>(subjectsJson);
+                if (loadedSubjects != null && loadedSubjects.Any())
+                {
+                    Subjects = loadedSubjects;
+                }
+            }
+
+            var notesJson = await _js.InvokeAsync<string?>("localStorage.getItem", "study_subject_notes");
+            if (!string.IsNullOrEmpty(notesJson))
+            {
+                var loadedNotes = JsonSerializer.Deserialize<List<SubjectNoteItem>>(notesJson);
+                if (loadedNotes != null && loadedNotes.Any())
+                {
+                    SubjectNotes = loadedNotes;
+                }
+            }
+
+            var resourcesJson = await _js.InvokeAsync<string?>("localStorage.getItem", "study_subject_resources");
+            if (!string.IsNullOrEmpty(resourcesJson))
+            {
+                var loadedResources = JsonSerializer.Deserialize<List<SubjectResourceItem>>(resourcesJson);
+                if (loadedResources != null)
+                {
+                    SubjectResources = loadedResources;
                 }
             }
 
@@ -446,10 +478,164 @@ public class StudyStateService : IDisposable
         NotifyStateChanged();
     }
 
+    // Subject & Notes Management
+    public async Task AddSubjectAsync(string name, string color, string description, string code = "", string instructor = "", string schedule = "")
+    {
+        if (string.IsNullOrWhiteSpace(name)) return;
+        var sub = new SubjectDef
+        {
+            Name = name.Trim(),
+            Color = string.IsNullOrWhiteSpace(color) ? "#6366F1" : color,
+            Description = description.Trim(),
+            Code = code.Trim(),
+            Instructor = instructor.Trim(),
+            Schedule = schedule.Trim()
+        };
+        Subjects.Add(sub);
+        await SaveDataAsync();
+        NotifyStateChanged();
+    }
+
+    public async Task UpdateSubjectAsync(SubjectDef updated)
+    {
+        var existing = Subjects.FirstOrDefault(s => s.Id == updated.Id);
+        if (existing != null)
+        {
+            var oldName = existing.Name;
+            existing.Name = updated.Name.Trim();
+            existing.Color = updated.Color;
+            existing.Description = updated.Description.Trim();
+            existing.Code = updated.Code.Trim();
+            existing.Instructor = updated.Instructor.Trim();
+            existing.Schedule = updated.Schedule.Trim();
+
+            // Update associated tasks and notes if name changed
+            if (oldName != existing.Name)
+            {
+                foreach (var note in SubjectNotes.Where(n => n.SubjectId == existing.Id || n.SubjectName == oldName))
+                {
+                    note.SubjectName = existing.Name;
+                    note.SubjectId = existing.Id;
+                }
+                foreach (var task in Tasks.Where(t => t.Subject == oldName))
+                {
+                    task.Subject = existing.Name;
+                }
+            }
+
+            await SaveDataAsync();
+            NotifyStateChanged();
+        }
+    }
+
+    public async Task DeleteSubjectAsync(string subjectId)
+    {
+        var sub = Subjects.FirstOrDefault(s => s.Id == subjectId);
+        if (sub != null)
+        {
+            Subjects.Remove(sub);
+            SubjectNotes.RemoveAll(n => n.SubjectId == subjectId || n.SubjectName == sub.Name);
+            SubjectResources.RemoveAll(r => r.SubjectId == subjectId);
+            await SaveDataAsync();
+            NotifyStateChanged();
+        }
+    }
+
+    public async Task AddSubjectNoteAsync(string subjectId, string title, string topic, string content, string tags = "", bool isPinned = false)
+    {
+        if (string.IsNullOrWhiteSpace(title)) return;
+        var sub = Subjects.FirstOrDefault(s => s.Id == subjectId) ?? Subjects.FirstOrDefault();
+        var note = new SubjectNoteItem
+        {
+            SubjectId = sub?.Id ?? subjectId,
+            SubjectName = sub?.Name ?? "General",
+            Title = title.Trim(),
+            Topic = topic.Trim(),
+            Content = content,
+            Tags = tags.Trim(),
+            IsPinned = isPinned,
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        };
+        SubjectNotes.Insert(0, note);
+        await SaveDataAsync();
+        NotifyStateChanged();
+    }
+
+    public async Task UpdateSubjectNoteAsync(SubjectNoteItem updated)
+    {
+        var note = SubjectNotes.FirstOrDefault(n => n.Id == updated.Id);
+        if (note != null)
+        {
+            note.Title = updated.Title.Trim();
+            note.Topic = updated.Topic.Trim();
+            note.Content = updated.Content;
+            note.Tags = updated.Tags.Trim();
+            note.IsPinned = updated.IsPinned;
+            note.SubjectId = updated.SubjectId;
+            var sub = Subjects.FirstOrDefault(s => s.Id == updated.SubjectId);
+            if (sub != null) note.SubjectName = sub.Name;
+            note.UpdatedAt = DateTime.Now;
+            await SaveDataAsync();
+            NotifyStateChanged();
+        }
+    }
+
+    public async Task DeleteSubjectNoteAsync(string noteId)
+    {
+        var note = SubjectNotes.FirstOrDefault(n => n.Id == noteId);
+        if (note != null)
+        {
+            SubjectNotes.Remove(note);
+            await SaveDataAsync();
+            NotifyStateChanged();
+        }
+    }
+
+    public async Task TogglePinNoteAsync(string noteId)
+    {
+        var note = SubjectNotes.FirstOrDefault(n => n.Id == noteId);
+        if (note != null)
+        {
+            note.IsPinned = !note.IsPinned;
+            note.UpdatedAt = DateTime.Now;
+            await SaveDataAsync();
+            NotifyStateChanged();
+        }
+    }
+
+    public async Task AddSubjectResourceAsync(string subjectId, string title, string urlOrRef, string type = "Cheatsheet")
+    {
+        if (string.IsNullOrWhiteSpace(title)) return;
+        SubjectResources.Add(new SubjectResourceItem
+        {
+            SubjectId = subjectId,
+            Title = title.Trim(),
+            UrlOrReference = urlOrRef.Trim(),
+            Type = type
+        });
+        await SaveDataAsync();
+        NotifyStateChanged();
+    }
+
+    public async Task DeleteSubjectResourceAsync(string resId)
+    {
+        var res = SubjectResources.FirstOrDefault(r => r.Id == resId);
+        if (res != null)
+        {
+            SubjectResources.Remove(res);
+            await SaveDataAsync();
+            NotifyStateChanged();
+        }
+    }
+
     public async Task ResetAllDataAsync()
     {
         Tasks.Clear();
         SessionHistory.Clear();
+        Subjects = new(SubjectDef.DefaultSubjects);
+        SubjectNotes = new(SubjectNoteItem.DefaultNotes);
+        SubjectResources.Clear();
         ActiveTaskId = null;
         CompletedPomodoroCount = 0;
         await SaveDataAsync();
@@ -464,6 +650,9 @@ public class StudyStateService : IDisposable
             await _js.InvokeVoidAsync("localStorage.setItem", "study_history", JsonSerializer.Serialize(SessionHistory));
             await _js.InvokeVoidAsync("localStorage.setItem", "study_settings", JsonSerializer.Serialize(Settings));
             await _js.InvokeVoidAsync("localStorage.setItem", "study_flashcards", JsonSerializer.Serialize(FlashcardDecks));
+            await _js.InvokeVoidAsync("localStorage.setItem", "study_subjects", JsonSerializer.Serialize(Subjects));
+            await _js.InvokeVoidAsync("localStorage.setItem", "study_subject_notes", JsonSerializer.Serialize(SubjectNotes));
+            await _js.InvokeVoidAsync("localStorage.setItem", "study_subject_resources", JsonSerializer.Serialize(SubjectResources));
         }
         catch { }
     }

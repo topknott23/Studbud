@@ -40,6 +40,16 @@
                         <span>Planner</span>
                     </NavLink>
 
+                    <NavLink href="subjects" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-[#1A1F30] transition-all flex items-center gap-2 [&.active]:bg-white dark:[&.active]:bg-indigo-600 dark:[&.active]:text-white [&.active]:text-slate-900 [&.active]:shadow-sm">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                            <line x1="9" y1="7" x2="16" y2="7"/>
+                            <line x1="9" y1="11" x2="14" y2="11"/>
+                        </svg>
+                        <span>Subjects & Notes</span>
+                    </NavLink>
+
                     <NavLink href="analytics" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-[#1A1F30] transition-all flex items-center gap-2 [&.active]:bg-white dark:[&.active]:bg-indigo-600 dark:[&.active]:text-white [&.active]:text-slate-900 [&.active]:shadow-sm">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="18" y1="20" x2="18" y2="10"/>
@@ -51,8 +61,8 @@
 
                     <NavLink href="flashcards" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-[#1A1F30] transition-all flex items-center gap-2 [&.active]:bg-white dark:[&.active]:bg-indigo-600 dark:[&.active]:text-white [&.active]:text-slate-900 [&.active]:shadow-sm">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                            <path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"></path>
                         </svg>
                         <span>Flashcards</span>
                     </NavLink>
@@ -114,20 +124,23 @@
         </div>
 
         <!-- Mobile Navigation Bar -->
-        <div class="md:hidden flex items-center justify-around border-t border-slate-200 dark:border-[#1E2337] py-2 px-2 bg-white/90 dark:bg-[#0B0D14]/90">
-            <NavLink href="" Match="NavLinkMatch.All" class="px-3 py-1 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] [&.active]:bg-indigo-600 [&.active]:text-white">
+        <div class="md:hidden flex items-center justify-around border-t border-slate-200 dark:border-[#1E2337] py-2 px-2 bg-white/90 dark:bg-[#0B0D14]/90 overflow-x-auto">
+            <NavLink href="" Match="NavLinkMatch.All" class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] [&.active]:bg-indigo-600 [&.active]:text-white whitespace-nowrap">
                 Timer
             </NavLink>
-            <NavLink href="planner" class="px-3 py-1 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] [&.active]:bg-indigo-600 [&.active]:text-white">
+            <NavLink href="planner" class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] [&.active]:bg-indigo-600 [&.active]:text-white whitespace-nowrap">
                 Planner
             </NavLink>
-            <NavLink href="analytics" class="px-3 py-1 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] [&.active]:bg-indigo-600 [&.active]:text-white">
+            <NavLink href="subjects" class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] [&.active]:bg-indigo-600 [&.active]:text-white whitespace-nowrap">
+                Subjects
+            </NavLink>
+            <NavLink href="analytics" class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] [&.active]:bg-indigo-600 [&.active]:text-white whitespace-nowrap">
                 Analytics
             </NavLink>
-            <NavLink href="flashcards" class="px-3 py-1 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] [&.active]:bg-indigo-600 [&.active]:text-white">
+            <NavLink href="flashcards" class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] [&.active]:bg-indigo-600 [&.active]:text-white whitespace-nowrap">
                 Flashcards
             </NavLink>
-            <NavLink href="settings" class="px-3 py-1 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] [&.active]:bg-indigo-600 [&.active]:text-white">
+            <NavLink href="settings" class="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-600 dark:text-[#949BAF] [&.active]:bg-indigo-600 [&.active]:text-white whitespace-nowrap">
                 Settings
             </NavLink>
         </div>

@@ -14,11 +14,12 @@ A study planner and Pomodoro focus application built with Blazor WebAssembly (.N
 
 ## Features
 
-- **Pomodoro Timer**: Work and break interval countdown with audio chime alerts.
+- **Pomodoro Timer**: Work and break interval countdown with continuous audio alarm and 5-min extension.
+- **Subjects & Notes Hub**: Coursework organizer with rich markdown notes, step-by-step guides (e.g. Clustering in Applied AI, NFA to DFA conversion in Automata Theory), cheatsheets, and subject tasks.
 - **Task Planner**: Kanban board and list views with priority levels and course tags.
 - **Analytics**: Focus time tracking, course study distribution, and session history logs.
-- **Flashcards**: Active recall study module (to be connected with database backend).
-- **Settings**: Focus duration presets (Classic, Deep Work, Sprint) and theme preferences.
+- **Flashcards**: Active recall study module.
+- **Settings**: Focus duration presets (Classic, Deep Work, Sprint), custom alarms, and theme preferences.
 
 ## Tech Stack
 

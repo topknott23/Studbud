@@ -1,0 +1,165 @@
+@using System.Text.RegularExpressions
+@using System.Text
+
+<div class="prose dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 text-xs sm:text-sm leading-relaxed space-y-2">
+    @((MarkupString)RenderFormattedContent(Content))
+</div>
+
+@code {
+    [Parameter] public string Content { get; set; } = string.Empty;
+
+    public static string RenderFormattedContent(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return "<p class='text-slate-400 italic text-xs'>No content provided.</p>";
+
+        var lines = raw.Replace("\r\n", "\n").Split('\n');
+        var sb = new StringBuilder();
+        bool inCodeBlock = false;
+        var codeBlockBuffer = new StringBuilder();
+        string codeLang = "";
+        bool inList = false;
+
+        foreach (var line in lines)
+        {
+            var trimmed = line.Trim();
+
+            // Code block handling
+            if (trimmed.StartsWith("```"))
+            {
+                if (inCodeBlock)
+                {
+                    inCodeBlock = false;
+                    sb.Append("<div class='my-3 rounded-xl bg-slate-900 text-emerald-400 p-3.5 font-mono text-xs overflow-x-auto border border-slate-800 shadow-inner'><pre><code>");
+                    sb.Append(System.Net.WebUtility.HtmlEncode(codeBlockBuffer.ToString().TrimEnd()));
+                    sb.Append("</code></pre></div>");
+                    codeBlockBuffer.Clear();
+                }
+                else
+                {
+                    if (inList) { sb.Append("</ul>"); inList = false; }
+                    inCodeBlock = true;
+                    codeLang = trimmed.Length > 3 ? trimmed.Substring(3).Trim() : "";
+                }
+                continue;
+            }
+
+            if (inCodeBlock)
+            {
+                codeBlockBuffer.AppendLine(line);
+                continue;
+            }
+
+            // Math display block ($$ ... $$)
+            if (trimmed.StartsWith("$$") && trimmed.EndsWith("$$") && trimmed.Length > 4)
+            {
+                if (inList) { sb.Append("</ul>"); inList = false; }
+                var math = trimmed.Substring(2, trimmed.Length - 4).Trim();
+                sb.Append("<div class='my-2.5 p-3 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-800/40 text-indigo-900 dark:text-indigo-200 font-mono text-xs text-center overflow-x-auto shadow-sm'>");
+                sb.Append(System.Net.WebUtility.HtmlEncode(math));
+                sb.Append("</div>");
+                continue;
+            }
+
+            // Horizontal Rule
+            if (trimmed == "---" || trimmed == "***" || trimmed == "___")
+            {
+                if (inList) { sb.Append("</ul>"); inList = false; }
+                sb.Append("<hr class='my-4 border-slate-200 dark:border-[#1E2337]' />");
+                continue;
+            }
+
+            // Headings
+            if (trimmed.StartsWith("#### "))
+            {
+                if (inList) { sb.Append("</ul>"); inList = false; }
+                sb.Append($"<h4 class='text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mt-3 mb-1'>{FormatInline(trimmed.Substring(5))}</h4>");
+                continue;
+            }
+            if (trimmed.StartsWith("### "))
+            {
+                if (inList) { sb.Append("</ul>"); inList = false; }
+                sb.Append($"<h3 class='text-sm sm:text-base font-bold text-slate-900 dark:text-white mt-3.5 mb-1.5 flex items-center gap-2'><span class='w-1.5 h-4 rounded-full bg-indigo-500 inline-block'></span>{FormatInline(trimmed.Substring(4))}</h3>");
+                continue;
+            }
+            if (trimmed.StartsWith("## "))
+            {
+                if (inList) { sb.Append("</ul>"); inList = false; }
+                sb.Append($"<h2 class='text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-4 mb-2 pb-1 border-b border-slate-200 dark:border-[#1E2337]'>{FormatInline(trimmed.Substring(3))}</h2>");
+                continue;
+            }
+            if (trimmed.StartsWith("# "))
+            {
+                if (inList) { sb.Append("</ul>"); inList = false; }
+                sb.Append($"<h1 class='text-lg sm:text-xl font-black text-slate-900 dark:text-white mt-4 mb-2'>{FormatInline(trimmed.Substring(2))}</h1>");
+                continue;
+            }
+
+            // Callout / Blockquote
+            if (trimmed.StartsWith("> "))
+            {
+                if (inList) { sb.Append("</ul>"); inList = false; }
+                sb.Append($"<div class='p-3 my-2 rounded-xl bg-amber-50/70 dark:bg-amber-950/25 border-l-4 border-amber-500 text-amber-900 dark:text-amber-200 text-xs'>{FormatInline(trimmed.Substring(2))}</div>");
+                continue;
+            }
+
+            // Bullet Lists
+            if (trimmed.StartsWith("- ") || trimmed.StartsWith("* "))
+            {
+                if (!inList) { sb.Append("<ul class='space-y-1.5 my-2'>"); inList = true; }
+                sb.Append($"<li class='flex items-start gap-2'><span class='text-indigo-500 mt-1 font-bold text-xs'>•</span><span class='flex-1'>{FormatInline(trimmed.Substring(2))}</span></li>");
+                continue;
+            }
+
+            // Numbered items (e.g., "1. ")
+            var matchNum = Regex.Match(trimmed, @"^(\d+)\.\s+(.*)$");
+            if (matchNum.Success)
+            {
+                if (inList) { sb.Append("</ul>"); inList = false; }
+                var num = matchNum.Groups[1].Value;
+                var itemText = matchNum.Groups[2].Value;
+                sb.Append($"<div class='flex items-start gap-2.5 my-1.5 pl-1'><span class='w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-bold text-[11px] flex items-center justify-center shrink-0 border border-indigo-200 dark:border-indigo-800/50'>{num}</span><div class='flex-1 pt-0.5'>{FormatInline(itemText)}</div></div>");
+                continue;
+            }
+
+            // Empty line
+            if (string.IsNullOrWhiteSpace(trimmed))
+            {
+                if (inList) { sb.Append("</ul>"); inList = false; }
+                continue;
+            }
+
+            // Normal paragraph
+            if (inList) { sb.Append("</ul>"); inList = false; }
+            sb.Append($"<p class='my-1.5 leading-relaxed text-slate-700 dark:text-slate-300'>{FormatInline(trimmed)}</p>");
+        }
+
+        if (inList) sb.Append("</ul>");
+        if (inCodeBlock && codeBlockBuffer.Length > 0)
+        {
+            sb.Append("<div class='my-3 rounded-xl bg-slate-900 text-emerald-400 p-3.5 font-mono text-xs overflow-x-auto border border-slate-800 shadow-inner'><pre><code>");
+            sb.Append(System.Net.WebUtility.HtmlEncode(codeBlockBuffer.ToString().TrimEnd()));
+            sb.Append("</code></pre></div>");
+        }
+
+        return sb.ToString();
+    }
+
+    private static string FormatInline(string text)
+    {
+        var encoded = System.Net.WebUtility.HtmlEncode(text);
+
+        // Bold: **text**
+        encoded = Regex.Replace(encoded, @"\*\*(.+?)\*\*", "<strong class=\"font-bold text-slate-900 dark:text-white\">$1</strong>");
+
+        // Italic: *text*
+        encoded = Regex.Replace(encoded, @"\*(.+?)\*", "<em class=\"italic text-slate-800 dark:text-slate-200\">$1</em>");
+
+        // Inline Code: `text`
+        encoded = Regex.Replace(encoded, @"`(.+?)`", "<code class=\"px-1.5 py-0.5 rounded bg-slate-100 dark:bg-[#1E2337] text-indigo-600 dark:text-indigo-400 font-mono text-[11px] border border-slate-200 dark:border-[#2E3654]\">$1</code>");
+
+        // Inline Math: $text$
+        encoded = Regex.Replace(encoded, @"\$(.+?)\$", "<span class=\"font-mono text-indigo-600 dark:text-indigo-300 font-semibold px-1 py-0.5 bg-indigo-50/50 dark:bg-indigo-950/30 rounded text-xs\">$1</span>");
+
+        return encoded;
+    }
+}
